@@ -134,7 +134,15 @@ export const MenuItemList: React.FC = () => {
         item.price <= activeFilters.priceRange[1];
 
       // Rating
-      const matchesRating = item.average_rating >= activeFilters.rating;
+      console.log(`Rating check for ${item.name}:`, {
+        itemRating: item.average_rating,
+        minRating: activeFilters.rating,
+        passes: item.average_rating >= activeFilters.rating
+      });
+      const matchesRating = activeFilters.rating === 0 || (
+        item.average_rating !== undefined && 
+        item.average_rating >= activeFilters.rating
+      );
 
       const matches = {
         search: matchesSearch,

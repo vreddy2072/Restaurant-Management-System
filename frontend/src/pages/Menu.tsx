@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Grid,
@@ -165,6 +165,27 @@ const Menu: React.FC = () => {
     }
   };
 
+  const handleRatingChange = useCallback(async (itemId: number, newRating: number) => {
+    setMenuItems(prevItems => {
+      const updatedItems = [...prevItems];
+      const itemIndex = updatedItems.findIndex(mi => mi.id === itemId);
+      if (itemIndex !== -1) {
+        updatedItems[itemIndex] = {
+          ...updatedItems[itemIndex],
+          average_rating: newRating
+        };
+      }
+      return updatedItems;
+    });
+  }, []);
+
+  const handleAverageRatingChange = useCallback((itemId: number, average: RatingAverage) => {
+    setItemAverageRatings(prev => ({
+      ...prev,
+      [itemId]: average.average
+    }));
+  }, []);
+
   const renderMenuItem = (item: MenuItemType) => (
     <ListItem
       key={item.id}
@@ -202,23 +223,8 @@ const Menu: React.FC = () => {
                 <RatingComponent
                   menuItemId={item.id}
                   initialRating={item.average_rating}
-                  onRatingChange={async (newRating) => {
-                    const updatedItems = [...menuItems];
-                    const itemIndex = updatedItems.findIndex(mi => mi.id === item.id);
-                    if (itemIndex !== -1) {
-                      updatedItems[itemIndex] = {
-                        ...updatedItems[itemIndex],
-                        average_rating: newRating
-                      };
-                      setMenuItems(updatedItems);
-                    }
-                  }}
-                  onAverageRatingChange={(average) => {
-                    setItemAverageRatings(prev => ({
-                      ...prev,
-                      [item.id]: average.average
-                    }));
-                  }}
+                  onRatingChange={(newRating) => handleRatingChange(item.id, newRating)}
+                  onAverageRatingChange={(average) => handleAverageRatingChange(item.id, average)}
                 />
               </Box>
               <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>

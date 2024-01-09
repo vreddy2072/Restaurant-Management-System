@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Rating,
@@ -19,23 +19,23 @@ import { useAuth } from '../../contexts/AuthContext';
 
 interface RatingComponentProps {
   menuItemId: number;
-  initialRating?: number;
+  initialRating: number;
+  initialRatingCount: number;
   onRatingChange?: (newRating: number) => void;
   onAverageRatingChange?: (average: RatingAverage) => void;
+  readOnly?: boolean;
 }
 
 const RatingComponent: React.FC<RatingComponentProps> = ({
   menuItemId,
   initialRating = 0,
+  initialRatingCount = 0,
   onRatingChange,
-  onAverageRatingChange
+  onAverageRatingChange,
+  readOnly = false
 }) => {
   const { user } = useAuth();
   const [rating, setRating] = useState<number | null>(null);
-  const [averageRating, setAverageRating] = useState<RatingAverage>({ 
-    average: initialRating, 
-    total: 0 
-  });
   const [hover, setHover] = useState(-1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [comment, setComment] = useState('');
@@ -43,23 +43,12 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [severity, setSeverity] = useState<'success' | 'error'>('success');
 
-  // Load average rating on mount and when initialRating changes
-  useEffect(() => {
-    const loadAverageRating = async () => {
-      try {
-        const average = await ratingService.getAverageRating(menuItemId);
-        setAverageRating(average);
-        if (onAverageRatingChange) {
-          onAverageRatingChange(average);
-        }
-      } catch (error) {
-        console.error('Error loading average rating:', error);
-      }
-    };
-    loadAverageRating();
-  }, [menuItemId, initialRating]);
+  const averageRating = useMemo(() => ({
+    average: initialRating,
+    total: initialRatingCount
+  }), [initialRating, initialRatingCount]);
 
-  // Only load user rating if user is logged in
+  // Only load user rating if user is logged in and not in readOnly mode
   useEffect(() => {
     const loadUserRating = async () => {
       try {
@@ -76,10 +65,10 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
       }
     };
 
-    if (user) {
+    if (user && !readOnly) {
       loadUserRating();
     }
-  }, [menuItemId, user]);
+  }, [menuItemId, user, readOnly]);
 
   const handleRatingClick = (newValue: number | null) => {
     if (!user) {
@@ -100,7 +89,6 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
         await ratingService.createOrUpdateRating(menuItemId, validRating, comment);
         // Refresh average rating after submitting
         const newAverage = await ratingService.getAverageRating(menuItemId);
-        setAverageRating(newAverage);
         if (onAverageRatingChange) {
           onAverageRatingChange(newAverage);
         }
@@ -128,10 +116,10 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
           <Rating
             value={averageRating.average}
             precision={0.5}
-            readOnly={!user}
+            readOnly={readOnly || !user}
             size="small"
-            onChange={(_, newValue) => handleRatingClick(newValue)}
-            onChangeActive={(_, newHover) => setHover(newHover)}
+            onChange={(_, newValue) => !readOnly && handleRatingClick(newValue)}
+            onChangeActive={(_, newHover) => !readOnly && setHover(newHover)}
             emptyIcon={<StarIcon style={{ opacity: 0.55 }} fontSize="inherit" />}
           />
           <Typography variant="body2" color="text.secondary">
@@ -142,48 +130,52 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
         </Box>
       </Stack>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-        <DialogTitle>Rate this item</DialogTitle>
-        <DialogContent>
-          <Box sx={{ py: 2 }}>
-            <Rating
-              value={rating}
-              onChange={(_, newValue) => setRating(newValue ? Math.round(newValue) : null)}
-              size="large"
-              precision={1}
-            />
-          </Box>
-          <TextField
-            fullWidth
-            multiline
-            rows={3}
-            variant="outlined"
-            label="Comment (optional)"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleSubmitRating} variant="contained">
-            Submit
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {!readOnly && (
+        <>
+          <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
+            <DialogTitle>Rate this item</DialogTitle>
+            <DialogContent>
+              <Box sx={{ py: 2 }}>
+                <Rating
+                  value={rating}
+                  onChange={(_, newValue) => setRating(newValue ? Math.round(newValue) : null)}
+                  size="large"
+                  precision={1}
+                />
+              </Box>
+              <TextField
+                fullWidth
+                multiline
+                rows={3}
+                variant="outlined"
+                label="Comment (optional)"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleSubmitRating} variant="contained">
+                Submit
+              </Button>
+            </DialogActions>
+          </Dialog>
 
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={() => setSnackbarOpen(false)}
-      >
-        <Alert
-          onClose={() => setSnackbarOpen(false)}
-          severity={severity}
-          variant="filled"
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={4000}
+            onClose={() => setSnackbarOpen(false)}
+          >
+            <Alert
+              onClose={() => setSnackbarOpen(false)}
+              severity={severity}
+              variant="filled"
+            >
+              {snackbarMessage}
+            </Alert>
+          </Snackbar>
+        </>
+      )}
     </>
   );
 };
