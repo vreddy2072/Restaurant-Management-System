@@ -5,8 +5,8 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://restaurant-management-system-5c3x.onrender.com/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://restaurant-management-system-5c3x.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
