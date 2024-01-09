@@ -1,10 +1,11 @@
 {
   "version": 2,
+  "functions": {
+    "backend/api/*.py": {
+      "runtime": "python3.11"
+    }
+  },
   "builds": [
-    {
-      "src": "backend/api/app.py",
-      "use": "@vercel/python"
-    },
     {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
@@ -14,18 +15,9 @@
       }
     }
   ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "backend/api/app.py"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "frontend/dist/index.html"
-    }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/backend/api/app.py" },
+    { "source": "/(.*)", "destination": "/frontend/dist/index.html" }
   ],
   "env": {
     "PYTHON_VERSION": "3.11",
