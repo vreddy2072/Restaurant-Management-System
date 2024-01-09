@@ -1,14 +1,18 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// In production, use relative path which will be handled by Vercel rewrites
+// In development, use the full localhost URL
+const isDevelopment = import.meta.env.VITE_NODE_ENV === 'development';
+const baseURL = isDevelopment ? 'http://localhost:8000' : '';
 
-// Remove /api from baseURL if it's already included in VITE_API_URL
-const normalizedBaseURL = baseURL.endsWith('/api') ? baseURL : `${baseURL}`;
-
-console.log('API Service initialized with baseURL:', normalizedBaseURL);
+console.log('API Service initialized with:', {
+  environment: import.meta.env.VITE_NODE_ENV,
+  baseURL,
+  apiUrl: import.meta.env.VITE_API_URL
+});
 
 export const api = axios.create({
-  baseURL: normalizedBaseURL,
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
