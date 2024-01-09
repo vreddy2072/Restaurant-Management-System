@@ -9,6 +9,14 @@
       "dest": "https://restaurant-management-system-5c3x.onrender.com/api/$1"
     },
     {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/(.*)\\.(?:js|css|svg|ico)$",
+      "dest": "/$1.$2"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
