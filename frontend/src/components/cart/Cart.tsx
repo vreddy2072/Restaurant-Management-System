@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Box,
   Typography,
@@ -7,6 +7,8 @@ import {
   Paper,
   Divider,
   Container,
+  Dialog,
+  Alert,
 } from '@mui/material';
 import { useCart } from '../../contexts/CartContext';
 import CartItem from './CartItem';
@@ -14,6 +16,7 @@ import CartSummary from './CartSummary';
 
 const Cart: React.FC = () => {
   const { cart, loading, error, clearCart } = useCart();
+  const [alertOpen, setAlertOpen] = useState(false);
 
   const cartTotal = useMemo(() => {
     if (!cart?.items) return 0;
@@ -21,6 +24,14 @@ const Cart: React.FC = () => {
       return total + (item.subtotal || 0);
     }, 0);
   }, [cart?.items]);
+
+  const handleCheckout = () => {
+    setAlertOpen(true);
+  };
+
+  const handleAlertClose = () => {
+    setAlertOpen(false);
+  };
 
   if (loading) {
     return (
@@ -59,24 +70,7 @@ const Cart: React.FC = () => {
               </Typography>
               <Divider sx={{ my: 1 }} />
               
-              <Box sx={{ 
-                maxHeight: 'calc(100vh - 200px)',
-                overflowY: 'auto',
-                '&::-webkit-scrollbar': {
-                  width: '8px',
-                },
-                '&::-webkit-scrollbar-track': {
-                  backgroundColor: 'rgba(0,0,0,0.1)',
-                  borderRadius: '4px',
-                },
-                '&::-webkit-scrollbar-thumb': {
-                  backgroundColor: 'rgba(0,0,0,0.2)',
-                  borderRadius: '4px',
-                  '&:hover': {
-                    backgroundColor: 'rgba(0,0,0,0.3)',
-                  },
-                },
-              }}>
+              <Box>
                 {cart.items.map((item) => (
                   <CartItem key={item.id} item={item} />
                 ))}
@@ -128,12 +122,37 @@ const Cart: React.FC = () => {
               color="primary"
               disabled={cart.items.length === 0}
               size="medium"
+              onClick={handleCheckout}
             >
               Proceed to Checkout
             </Button>
           </Box>
         </Container>
       </Paper>
+
+      <Dialog
+        open={alertOpen}
+        onClose={handleAlertClose}
+        PaperProps={{
+          sx: {
+            minWidth: '300px',
+            maxWidth: '400px',
+            m: 2
+          }
+        }}
+      >
+        <Alert 
+          onClose={handleAlertClose} 
+          severity="info" 
+          variant="filled"
+          sx={{ 
+            fontSize: '1.1rem',
+            padding: '16px 24px'
+          }}
+        >
+          Checkout functionality is coming soon!
+        </Alert>
+      </Dialog>
     </Box>
   );
 };
