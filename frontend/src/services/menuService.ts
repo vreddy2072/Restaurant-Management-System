@@ -1,5 +1,5 @@
 import { api } from './api';
-import { MenuItem, Category, MenuItemCreate, MenuItemUpdate, CategoryCreate, CategoryUpdate } from '../types/menu';
+import { MenuItem, Category, MenuItemCreate, MenuItemUpdate, CategoryCreate, CategoryUpdate, Allergen } from '../types/menu';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -20,7 +20,7 @@ class MenuService {
     if (categoryId) params.append('category_id', categoryId.toString());
     if (activeOnly) params.append('active_only', 'true');
     
-    const response = await api.get(`/api/menu/items`, { params });
+    const response = await api.get(`/api/menu/items/`, { params });
     return response.data.map(ensureAbsoluteImageUrl);
   }
 
@@ -30,13 +30,24 @@ class MenuService {
   }
 
   async createMenuItem(data: MenuItemCreate): Promise<MenuItem> {
-    const response = await api.post(`/api/menu/items`, data);
-    return ensureAbsoluteImageUrl(response.data);
+    console.log('Creating menu item with data:', data);
+    const response = await api.post('/api/menu/items/', data);
+    console.log('Create response:', response.data);
+    return response.data;
   }
 
   async updateMenuItem(id: number, data: MenuItemUpdate): Promise<MenuItem> {
-    const response = await api.patch(`/api/menu/items/${id}`, data);
-    return ensureAbsoluteImageUrl(response.data);
+    console.log('updateMenuItem - Request URL:', `/api/menu/items/${id}`);
+    console.log('updateMenuItem - Request data:', JSON.stringify(data, null, 2));
+    
+    try {
+      const response = await api.patch(`/api/menu/items/${id}/`, data);
+      console.log('updateMenuItem - Response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('updateMenuItem - Error:', error);
+      throw error;
+    }
   }
 
   async deleteMenuItem(id: number): Promise<void> {
@@ -79,6 +90,13 @@ class MenuService {
       },
     });
     return ensureAbsoluteImageUrl(response.data);
+  }
+
+  async getAllergens(): Promise<Allergen[]> {
+    console.log('Fetching allergens...');
+    const response = await api.get(`/api/menu/allergens`);
+    console.log('Allergens response:', response.data);
+    return response.data;
   }
 }
 
