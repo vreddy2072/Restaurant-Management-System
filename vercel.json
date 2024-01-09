@@ -2,25 +2,11 @@
   "version": 2,
   "builds": [
     {
-      "src": "backend/api/app.py",
+      "src": "backend/api/vercel_handler.py",
       "use": "@vercel/python",
       "config": {
         "runtime": "python3.11",
-        "maxLambdaSize": "250mb",
-        "installCommand": "pip install --no-deps --no-cache-dir fastapi uvicorn sqlalchemy pydantic python-dotenv python-jose[cryptography] passlib[bcrypt] python-multipart email-validator",
-        "includeFiles": [
-          "backend/api/app.py",
-          "backend/api/routes/*.py",
-          "backend/models/schemas/*.py",
-          "backend/services/*.py",
-          "backend/utils/*.py"
-        ],
-        "excludeFiles": [
-          "**/__pycache__",
-          "**/*.pyc",
-          "**/tests",
-          "**/.pytest_cache"
-        ]
+        "installCommand": "pip install --no-cache-dir fastapi uvicorn"
       }
     },
     {
@@ -35,7 +21,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "backend/api/app.py"
+      "dest": "backend/api/vercel_handler.py"
     },
     {
       "handle": "filesystem"
@@ -48,8 +34,6 @@
   "env": {
     "PYTHON_VERSION": "3.11",
     "NODE_VERSION": "20.x",
-    "DATABASE_URL": "sqlite:///backend/database/restaurant.db",
-    "ALLOWED_ORIGINS": "https://*.vercel.app,http://localhost:5173,http://localhost:3000",
-    "PYTHONPATH": "/var/task"
+    "ALLOWED_ORIGINS": "https://*.vercel.app,http://localhost:5173,http://localhost:3000"
   }
 }
