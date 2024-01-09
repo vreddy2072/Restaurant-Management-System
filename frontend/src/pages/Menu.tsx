@@ -22,6 +22,8 @@ import {
   Divider,
   Card,
   CardContent,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import {
   FilterList as FilterIcon,
@@ -33,8 +35,10 @@ import MenuItemCard from '../components/menu/MenuItemCard';
 import { MenuItem as MenuItemType } from '../types/menu';
 import { menuService } from '../services/menuService';
 import { MenuFilters, MenuFilterValues } from '../components/menu/MenuFilters';
+import { useCart } from '../contexts/CartContext';
 
 const Menu: React.FC = () => {
+  const { addToCart, loading: cartLoading } = useCart();
   const [menuItems, setMenuItems] = useState<MenuItemType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -144,6 +148,17 @@ const Menu: React.FC = () => {
     return acc;
   }, {} as Record<string, MenuItemType[]>);
 
+  const handleAddToCart = async (item: MenuItemType) => {
+    try {
+      await addToCart({
+        menu_item_id: item.id,
+        quantity: 1,
+      });
+    } catch (err) {
+      console.error('Failed to add item to cart:', err);
+    }
+  };
+
   const renderMenuItem = (item: MenuItemType) => (
     <ListItem
       key={item.id}
@@ -208,6 +223,8 @@ const Menu: React.FC = () => {
                 variant="contained"
                 size="small"
                 startIcon={<AddIcon />}
+                onClick={() => handleAddToCart(item)}
+                disabled={cartLoading}
                 sx={{ minWidth: 100 }}
               >
                 Add

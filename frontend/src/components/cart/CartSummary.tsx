@@ -5,9 +5,9 @@ interface CartSummaryProps {
   total: number;
 }
 
-const CartSummary: React.FC<CartSummaryProps> = ({ total }) => {
+const CartSummary: React.FC<CartSummaryProps> = ({ total = 0 }) => {
   const TAX_RATE = 0.08; // 8% tax rate
-  const subtotal = total;
+  const subtotal = total || 0;
   const tax = subtotal * TAX_RATE;
   const finalTotal = subtotal + tax;
 
