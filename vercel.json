@@ -12,23 +12,20 @@
   ],
   "routes": [
     {
-      "src": "^/assets/(.*)",
-      "dest": "/frontend/dist/assets/$1"
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
     },
     {
       "src": "/api/(.*)",
       "dest": "https://restaurant-management-system-5c3x.onrender.com/api/$1"
     },
     {
-      "src": "^/favicon.ico",
-      "dest": "/frontend/dist/favicon.ico"
+      "src": "/vite.svg",
+      "dest": "/vite.svg"
     },
     {
       "src": "/(.*)",
-      "dest": "/frontend/dist/index.html",
-      "headers": {
-        "Cache-Control": "no-cache, no-store, must-revalidate"
-      }
+      "dest": "/index.html"
     }
   ]
 }
