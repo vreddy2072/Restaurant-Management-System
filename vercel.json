@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "backend/api/app.py",
+      "use": "@vercel/python",
+      "config": {
+        "runtime": "python3.11",
+        "maxLambdaSize": "15mb"
+      }
+    },
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/node",
+      "config": {
+        "nodeVersion": "18.x"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/api/app.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/$1"
+    }
+  ],
+  "env": {
+    "PYTHON_VERSION": "3.11",
+    "NODE_VERSION": "18.x"
+  }
+}
