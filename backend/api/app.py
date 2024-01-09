@@ -21,6 +21,7 @@ from backend.services.user_service import UserService
 from backend.utils.auth import create_access_token, get_current_user
 from backend.api.routes.menu import router as menu_router
 from backend.api.routes.cart import router as cart_router
+from backend.api.routes.ratings import router as ratings_router
 
 # Load environment variables
 load_dotenv()
@@ -226,6 +227,11 @@ logger.debug(f"Menu router routes: {[route.path for route in menu_router.routes]
 logger.info("Registering cart router...")
 app.include_router(cart_router)
 logger.debug(f"Cart router routes: {[route.path for route in cart_router.routes]}")
+
+# Register ratings router
+logger.info("Registering ratings router...")
+app.include_router(ratings_router)
+logger.debug(f"Ratings router routes: {[route.path for route in ratings_router.routes]}")
 
 @app.get("/test", tags=["test"])
 def test_endpoint():
