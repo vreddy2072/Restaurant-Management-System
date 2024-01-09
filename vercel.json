@@ -16,7 +16,8 @@
       "src": "frontend/package.json",
       "use": "@vercel/node",
       "config": {
-        "nodeVersion": "20.x"
+        "nodeVersion": "20.x",
+        "buildCommand": "cd frontend && npm install --legacy-peer-deps && npm run build"
       }
     }
   ],
