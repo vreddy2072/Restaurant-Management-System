@@ -267,4 +267,31 @@ class MenuService:
             # Exclude items that have any of the specified allergens
             query = query.filter(~MenuItem.allergens.any(Allergen.id.in_(filters.allergen_exclude_ids)))
         
-        return query.offset(skip).limit(limit).all() 
+        return query.offset(skip).limit(limit).all()
+
+    @staticmethod
+    def filter_menu_items(
+        db: Session,
+        is_vegetarian: Optional[bool] = None,
+        is_vegan: Optional[bool] = None,
+        is_gluten_free: Optional[bool] = None,
+        allergen_exclude_ids: Optional[List[int]] = None
+    ) -> List[MenuItem]:
+        """Filter menu items by dietary preferences and allergens"""
+        query = db.query(MenuItem).filter(MenuItem.is_active == True)
+        
+        if is_vegetarian is not None:
+            query = query.filter(MenuItem.is_vegetarian == is_vegetarian)
+        
+        if is_vegan is not None:
+            query = query.filter(MenuItem.is_vegan == is_vegan)
+        
+        if is_gluten_free is not None:
+            query = query.filter(MenuItem.is_gluten_free == is_gluten_free)
+        
+        if allergen_exclude_ids:
+            # Exclude items that contain any of the specified allergens
+            for allergen_id in allergen_exclude_ids:
+                query = query.filter(~MenuItem.allergens.any(Allergen.id == allergen_id))
+        
+        return query.all()

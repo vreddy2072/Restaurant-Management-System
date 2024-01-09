@@ -15,13 +15,17 @@ BACKEND_DIR = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 db_path = BACKEND_DIR / "database"
 db_path.mkdir(parents=True, exist_ok=True)
 
-# Database file path
+# Database file paths
 DB_FILE = db_path / "restaurant.db"
+TEST_DB_FILE = db_path / "test.db"
 
 # Get database URL from environment variable or use default with absolute path
-DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_FILE}")
-
-print(f"Using database at: {DB_FILE}")
+if os.getenv("TESTING", "0") == "1":
+    DATABASE_URL = f"sqlite:///{TEST_DB_FILE}"
+    print(f"Using test database at: {TEST_DB_FILE}")
+else:
+    DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_FILE}")
+    print(f"Using database at: {DB_FILE}")
 
 # Create SQLAlchemy engine
 engine = create_engine(
@@ -36,9 +40,6 @@ Base = declarative_base()
 def init_db():
     """Initialize the database by creating all tables."""
     Base.metadata.create_all(bind=engine)
-
-# Initialize tables
-init_db()
 
 def get_db():
     """Dependency to get database session."""

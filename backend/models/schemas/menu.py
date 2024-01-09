@@ -86,4 +86,8 @@ class MenuItemFilters(BaseModel):
     min_price: Optional[float] = None
     max_price: Optional[float] = None
     min_rating: Optional[float] = Field(None, ge=0, le=5)
-    allergen_exclude_ids: Optional[List[int]] = None 
+    allergen_exclude_ids: Optional[List[int]] = None
+
+class RatingCreate(BaseModel):
+    """Schema for creating a rating"""
+    rating: float = Field(..., ge=0, le=5, description="Rating value between 0 and 5")
