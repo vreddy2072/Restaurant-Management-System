@@ -9,7 +9,8 @@
         "maxLambdaSize": "15mb",
         "includeFiles": [
           "backend/database/**"
-        ]
+        ],
+        "installCommand": "pip install -r backend/requirements.txt"
       }
     },
     {
