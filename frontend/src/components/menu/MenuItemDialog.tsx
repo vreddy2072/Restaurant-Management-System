@@ -188,10 +188,12 @@ export const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
         is_gluten_free: Boolean(formData.is_gluten_free),
         spice_level: Number(formData.spice_level) || 0,
         preparation_time: Number(formData.preparation_time) || 0,
-        allergen_info: formData.allergens || [],
-        nutritional_info: {},
+        allergen_ids: formData.allergens?.map(a => a.id) || [],
         image_url: formData.image_url || '',
-        is_available: true
+        is_available: true,
+        is_active: true,
+        allergens: formData.allergens || [],
+        customization_options: {}
       };
       
       let savedItem;
