@@ -171,43 +171,39 @@ export const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
     }
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
-
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     try {
+      const menuItemData: MenuItemCreate = {
+        name: formData.name,
+        description: formData.description,
+        price: formData.price,
+        category_id: formData.category_id,
+        is_vegetarian: formData.is_vegetarian,
+        is_vegan: formData.is_vegan,
+        is_gluten_free: formData.is_gluten_free,
+        spice_level: formData.spice_level,
+        preparation_time: formData.preparation_time,
+        allergen_info: formData.allergens,
+        nutritional_info: {},
+        image_url: formData.image_url,
+        is_available: true
+      };
+      if (!validateForm()) return;
+
       setLoading(true);
       
       // Log initial form data
       console.log('Form data before submission:', formData);
       console.log('Allergens in form data:', formData.allergens);
       
-      const dataToSave: MenuItemCreate = {
-        name: formData.name || '',
-        description: formData.description || '',
-        price: Number(formData.price) || 0,
-        category_id: Number(formData.category_id) || 0,
-        is_active: Boolean(formData.is_active),
-        is_vegetarian: Boolean(formData.is_vegetarian),
-        is_vegan: Boolean(formData.is_vegan),
-        is_gluten_free: Boolean(formData.is_gluten_free),
-        spice_level: Number(formData.spice_level) || 0,
-        preparation_time: Number(formData.preparation_time) || 0,
-        allergen_ids: formData.allergens?.map(allergen => allergen.id) || [],
-        customization_options: formData.customization_options || {},
-        average_rating: 0,
-        rating_count: 0
-      };
-      
-      // Log the exact data being sent
-      console.log('Data being sent to API:', JSON.stringify(dataToSave, null, 2));
-      
       let savedItem;
       if (item) {
         console.log('Updating item with ID:', item.id);
-        savedItem = await menuService.updateMenuItem(item.id, dataToSave);
+        savedItem = await menuService.updateMenuItem(item.id, menuItemData);
       } else {
         console.log('Creating new item');
-        savedItem = await menuService.createMenuItem(dataToSave);
+        savedItem = await menuService.createMenuItem(menuItemData);
       }
       
       // Log the response
