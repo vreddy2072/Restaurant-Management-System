@@ -18,6 +18,16 @@ const menuItems = [
     icon: '📝'
   },
   {
+    title: 'Cart',
+    path: '/cart',
+    icon: '🛒'
+  },
+  {
+    title: 'Feedback',
+    path: '/feedback',
+    icon: '⭐'
+  },
+  {
     title: 'Inventory',
     path: '/inventory',
     icon: '📦'

@@ -21,16 +21,21 @@ interface RatingComponentProps {
   menuItemId: number;
   initialRating?: number;
   onRatingChange?: (newRating: number) => void;
+  onAverageRatingChange?: (average: RatingAverage) => void;
 }
 
 const RatingComponent: React.FC<RatingComponentProps> = ({
   menuItemId,
   initialRating = 0,
-  onRatingChange
+  onRatingChange,
+  onAverageRatingChange
 }) => {
   const { user } = useAuth();
   const [rating, setRating] = useState<number | null>(null);
-  const [averageRating, setAverageRating] = useState<RatingAverage>({ average: 0, total: 0 });
+  const [averageRating, setAverageRating] = useState<RatingAverage>({ 
+    average: initialRating, 
+    total: 0 
+  });
   const [hover, setHover] = useState(-1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [comment, setComment] = useState('');
@@ -38,16 +43,23 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [severity, setSeverity] = useState<'success' | 'error'>('success');
 
-  // Load average rating
+  // Load average rating on mount and when initialRating changes
   useEffect(() => {
     const loadAverageRating = async () => {
-      const average = await ratingService.getAverageRating(menuItemId);
-      setAverageRating(average);
+      try {
+        const average = await ratingService.getAverageRating(menuItemId);
+        setAverageRating(average);
+        if (onAverageRatingChange) {
+          onAverageRatingChange(average);
+        }
+      } catch (error) {
+        console.error('Error loading average rating:', error);
+      }
     };
     loadAverageRating();
-  }, [menuItemId]);
+  }, [menuItemId, initialRating]);
 
-  // Load user rating
+  // Only load user rating if user is logged in
   useEffect(() => {
     const loadUserRating = async () => {
       try {
@@ -89,11 +101,14 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
         // Refresh average rating after submitting
         const newAverage = await ratingService.getAverageRating(menuItemId);
         setAverageRating(newAverage);
+        if (onAverageRatingChange) {
+          onAverageRatingChange(newAverage);
+        }
         setSnackbarMessage('Rating submitted successfully');
         setSeverity('success');
         setSnackbarOpen(true);
         if (onRatingChange) {
-          onRatingChange(validRating);
+          onRatingChange(newAverage.average);
         }
       }
     } catch (error) {
@@ -112,9 +127,12 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Rating
             value={averageRating.average}
-            precision={0.1}
-            readOnly
+            precision={0.5}
+            readOnly={!user}
             size="small"
+            onChange={(_, newValue) => handleRatingClick(newValue)}
+            onChangeActive={(_, newHover) => setHover(newHover)}
+            emptyIcon={<StarIcon style={{ opacity: 0.55 }} fontSize="inherit" />}
           />
           <Typography variant="body2" color="text.secondary">
             {`${averageRating.average.toFixed(1)} (${averageRating.total} ${
@@ -122,22 +140,6 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
             })`}
           </Typography>
         </Box>
-
-        {/* User Rating Input */}
-        {user && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Rating
-              value={rating || 0}
-              precision={1}
-              onChange={(_, newValue) => handleRatingClick(newValue)}
-              onChangeActive={(_, newHover) => setHover(newHover)}
-              emptyIcon={<StarIcon style={{ opacity: 0.55 }} fontSize="inherit" />}
-            />
-            <Typography variant="body2" color="text.secondary">
-              {hover !== -1 ? hover : rating || 0}
-            </Typography>
-          </Box>
-        )}
       </Stack>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>

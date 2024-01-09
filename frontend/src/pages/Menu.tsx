@@ -37,6 +37,7 @@ import { menuService } from '../services/menuService';
 import { MenuFilters, MenuFilterValues } from '../components/menu/MenuFilters';
 import { useCart } from '../contexts/CartContext';
 import RatingComponent from '../components/menu/RatingComponent';
+import { ratingService } from '../services/ratingService';
 
 const Menu: React.FC = () => {
   const { addToCart, loading: cartLoading } = useCart();
@@ -46,6 +47,7 @@ const Menu: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [itemAverageRatings, setItemAverageRatings] = useState<Record<number, number>>({});
   const [activeFilters, setActiveFilters] = useState<MenuFilterValues>({
     is_vegetarian: false,
     is_vegan: false,
@@ -57,6 +59,19 @@ const Menu: React.FC = () => {
     try {
       const items = await menuService.getMenuItems();
       setMenuItems(items);
+      
+      // Fetch all average ratings at once
+      const ratingsPromises = items.map(item => 
+        ratingService.getAverageRating(item.id)
+          .then(average => ({ id: item.id, average: average.average }))
+      );
+      const ratings = await Promise.all(ratingsPromises);
+      const ratingsMap = ratings.reduce((acc, { id, average }) => {
+        acc[id] = average;
+        return acc;
+      }, {} as Record<number, number>);
+      setItemAverageRatings(ratingsMap);
+      
       setError(null);
     } catch (err) {
       console.error('Error fetching menu items:', err);
@@ -111,13 +126,14 @@ const Menu: React.FC = () => {
           activeFilters.allergen_exclude.includes(allergen.name)
         );
 
-      // Apply rating filter
+      // Apply rating filter using the stored average ratings
+      const itemAverageRating = itemAverageRatings[item.id] || 0;
       const matchesRating = !activeFilters.min_rating || 
-        (item.average_rating && item.average_rating >= activeFilters.min_rating);
+        (itemAverageRating >= activeFilters.min_rating);
 
       return matchesSearch && matchesCategory && matchesDietary && matchesAllergens && matchesRating;
     });
-  }, [menuItems, searchQuery, categoryFilter, activeFilters]);
+  }, [menuItems, searchQuery, categoryFilter, activeFilters, itemAverageRatings]);
 
   const categories = ['all', ...new Set(menuItems
     .filter(item => item.category)
@@ -186,14 +202,22 @@ const Menu: React.FC = () => {
                 <RatingComponent
                   menuItemId={item.id}
                   initialRating={item.average_rating}
-                  onRatingChange={(newRating) => {
-                    // Update the item's rating in the local state
-                    const updatedItems = menuItems.map(menuItem => 
-                      menuItem.id === item.id 
-                        ? { ...menuItem, average_rating: newRating }
-                        : menuItem
-                    );
-                    setMenuItems(updatedItems);
+                  onRatingChange={async (newRating) => {
+                    const updatedItems = [...menuItems];
+                    const itemIndex = updatedItems.findIndex(mi => mi.id === item.id);
+                    if (itemIndex !== -1) {
+                      updatedItems[itemIndex] = {
+                        ...updatedItems[itemIndex],
+                        average_rating: newRating
+                      };
+                      setMenuItems(updatedItems);
+                    }
+                  }}
+                  onAverageRatingChange={(average) => {
+                    setItemAverageRatings(prev => ({
+                      ...prev,
+                      [item.id]: average.average
+                    }));
                   }}
                 />
               </Box>
@@ -353,9 +377,6 @@ const Menu: React.FC = () => {
         onClose={() => setFilterDrawerOpen(false)}
       >
         <Box sx={{ width: 300, p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Filters
-          </Typography>
           <MenuFilters
             onFilterChange={handleFilterChange}
             availableAllergens={getAllergens()}
