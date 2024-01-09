@@ -57,8 +57,9 @@ describe('MenuFilters', () => {
   it('handles price range input', async () => {
     render(<MenuFilters onFilterChange={mockOnFilterChange} />);
 
-    const minPriceInput = screen.getByLabelText('Min Price');
-    const maxPriceInput = screen.getByLabelText('Max Price');
+    const sliderInputs = screen.getAllByRole('slider');
+    const minPriceInput = sliderInputs[0];
+    const maxPriceInput = sliderInputs[1];
 
     fireEvent.change(minPriceInput, { target: { value: '10' } });
     await waitFor(() => {
@@ -93,7 +94,6 @@ describe('MenuFilters', () => {
 
   it('handles allergen exclusion selection', async () => {
     const mockAllergens = ['dairy', 'nuts', 'gluten'];
-
     render(
       <MenuFilters 
         onFilterChange={mockOnFilterChange}
@@ -119,7 +119,11 @@ describe('MenuFilters', () => {
 
     // Set some filters first
     fireEvent.click(screen.getByLabelText('Vegetarian'));
-    fireEvent.change(screen.getByLabelText('Min Price'), { target: { value: '10' } });
+    
+    // Get the price range slider inputs
+    const sliderInputs = screen.getAllByRole('slider');
+    const minPriceInput = sliderInputs[0];
+    fireEvent.change(minPriceInput, { target: { value: '10' } });
 
     // Clear filters
     fireEvent.click(screen.getByText('Clear Filters'));
@@ -136,4 +140,4 @@ describe('MenuFilters', () => {
       });
     });
   });
-}); 
+});

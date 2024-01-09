@@ -5,17 +5,29 @@ import {
   Tab,
   Box,
   Typography,
-  Paper
+  Paper,
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { CategoryList } from '../components/menu/CategoryList';
 import { MenuItemList } from '../components/menu/MenuItemList';
 
 export const MenuManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -24,6 +36,12 @@ export const MenuManagement: React.FC = () => {
           Menu Management
         </Typography>
         
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
           <Tabs value={activeTab} onChange={handleTabChange}>
             <Tab label="Categories" />

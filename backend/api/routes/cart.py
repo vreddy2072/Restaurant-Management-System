@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 import logging
+from datetime import datetime
+from typing import Optional
 
 from backend.models.schemas.cart import CartResponse, CartItemCreate, CartItemUpdate
-from backend.services.cart import CartService
+from backend.services.cart_service import CartService
 from backend.utils.database import get_db
 from backend.utils.auth import get_current_user
 from backend.models.schemas.user import UserResponse
@@ -20,10 +22,19 @@ async def get_cart(
 ):
     """Get the current user's shopping cart"""
     try:
+        # Require authentication
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated"
+            )
+        
         logger.debug(f"Fetching cart for user {current_user.id}")
         service = CartService(db)
         cart = service.get_or_create_cart(current_user.id)
         return cart
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error fetching cart: {str(e)}")
         raise HTTPException(

@@ -28,7 +28,10 @@ db_path.mkdir(parents=True, exist_ok=True)
 TEST_DATABASE_URL = f"sqlite:///{db_path}/test.db"
 
 # Create test engine
-test_engine = create_engine(TEST_DATABASE_URL)
+test_engine = create_engine(
+    TEST_DATABASE_URL,
+    connect_args={"check_same_thread": False}  # Allow SQLite to be used across threads
+)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
 @pytest.fixture(scope="session", autouse=True)

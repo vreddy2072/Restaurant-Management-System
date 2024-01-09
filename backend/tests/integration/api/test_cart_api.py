@@ -5,7 +5,7 @@ import logging
 
 from backend.models.orm.user import User
 from backend.models.orm.menu import MenuItem
-from backend.services.user import UserService
+from backend.services.user_service import UserService
 from backend.utils.auth import create_access_token
 
 pytestmark = pytest.mark.usefixtures("db_session")

@@ -30,7 +30,7 @@ import {
   TuneOutlined as FilterSettingsIcon,
   Add as AddIcon
 } from '@mui/icons-material';
-import { MenuItemCard } from './MenuItemCard';
+import MenuItemCard from './MenuItemCard';
 import { MenuItemListView } from './MenuItemListView';
 import { menuService } from '../../services/menuService';
 import type { MenuItem, Category } from '../../types/menu';
@@ -94,10 +94,19 @@ export const MenuItemList: React.FC = () => {
   };
 
   const filterItems = () => {
+    console.log('Filtering items with:', {
+      searchTerm: filters.search,
+      category: filters.category,
+      dietary: activeFilters.dietary,
+      allergens: activeFilters.allergens,
+      priceRange: activeFilters.priceRange,
+      rating: activeFilters.rating
+    });
+
     return items.filter(item => {
       // Search filter
       const matchesSearch = item.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-        item.description.toLowerCase().includes(filters.search.toLowerCase());
+        (item.description?.toLowerCase() || '').includes(filters.search.toLowerCase());
 
       // Category filter
       const matchesCategory = filters.category === 'all' || item.category_id === Number(filters.category);
@@ -115,7 +124,7 @@ export const MenuItemList: React.FC = () => {
       // Allergens
       const matchesAllergens = activeFilters.allergens.length === 0 ||
         !activeFilters.allergens.some(allergen => 
-          item.allergens.some(itemAllergen => itemAllergen.name === allergen)
+          item.allergens?.some(itemAllergen => itemAllergen.name === allergen)
         );
 
       // Price range
@@ -124,6 +133,17 @@ export const MenuItemList: React.FC = () => {
 
       // Rating
       const matchesRating = item.average_rating >= activeFilters.rating;
+
+      const matches = {
+        search: matchesSearch,
+        category: matchesCategory,
+        dietary: matchesDietary,
+        allergens: matchesAllergens,
+        price: matchesPrice,
+        rating: matchesRating
+      };
+
+      console.log(`Filtering item "${item.name}":`, matches);
 
       return matchesSearch && matchesCategory && matchesDietary && 
         matchesAllergens && matchesPrice && matchesRating;
@@ -302,6 +322,15 @@ export const MenuItemList: React.FC = () => {
   );
 
   const renderContent = () => {
+    console.log('Rendering content with state:', {
+      loading,
+      error,
+      itemsCount: items.length,
+      categoriesCount: categories.length,
+      filters,
+      activeFilters
+    });
+
     if (loading) {
       return <div>Loading...</div>;
     }
@@ -311,6 +340,11 @@ export const MenuItemList: React.FC = () => {
     }
 
     const filteredItems = filterItems();
+    console.log('Filtered items:', filteredItems);
+
+    if (filteredItems.length === 0) {
+      return <Alert severity="info">No menu items found</Alert>;
+    }
 
     if (viewMode === 'grid') {
       return (
@@ -347,17 +381,18 @@ export const MenuItemList: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
+      console.log('Loading menu data...');
       const [menuItems, categoryList] = await Promise.all([
         menuService.getMenuItems(),
         menuService.getCategories()
       ]);
+      console.log('Loaded menu items:', menuItems);
+      console.log('Loaded categories:', categoryList);
       setItems(menuItems);
       setCategories(categoryList);
-      console.log('Menu Items loaded:', menuItems); // Debug log
-      console.log('Available Allergens:', getAllergens()); // Debug log
     } catch (error) {
-      setError('Failed to load data. Please try again.');
       console.error('Failed to load data:', error);
+      setError('Failed to load data. Please try again.');
     } finally {
       setLoading(false);
     }

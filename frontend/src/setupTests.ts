@@ -22,6 +22,9 @@ Object.defineProperty(window, 'matchMedia', {
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder as any;
 
+// Mock api module
+jest.mock('./services/api');
+
 // Setup MSW
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());

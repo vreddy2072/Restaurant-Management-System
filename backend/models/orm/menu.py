@@ -55,6 +55,7 @@ class MenuItem(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     customization_options = Column(JSON, default=dict)
+    selected_customization = Column(JSON, default=dict)
     average_rating = Column(Float, default=0.0)
     rating_count = Column(Integer, default=0)
     image_url = Column(String, nullable=True)
@@ -66,6 +67,8 @@ class MenuItem(Base):
     def __init__(self, **kwargs):
         if 'price' in kwargs and kwargs['price'] < 0:
             raise ValueError("Price cannot be negative")
+        if 'spice_level' in kwargs and (kwargs['spice_level'] < 0 or kwargs['spice_level'] > 3):
+            raise ValueError("Spice level must be between 0 and 3")
         super().__init__(**kwargs)
 
     def to_dict(self):
@@ -84,6 +87,7 @@ class MenuItem(Base):
             "is_active": self.is_active,
             "is_available": self.is_available,
             "customization_options": self.customization_options,
+            "selected_customization": self.selected_customization,
             "average_rating": self.average_rating,
             "rating_count": self.rating_count,
             "image_url": self.image_url,

@@ -12,7 +12,8 @@ import {
   Tooltip,
   Stack,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  CardActions,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -24,6 +25,7 @@ import {
 } from '@mui/icons-material';
 import type { MenuItem } from '../../types/menu';
 import { styled } from '@mui/material/styles';
+import AddToCartButton from '../cart/AddToCartButton';
 
 interface MenuItemCardProps {
   item: MenuItem;
@@ -32,6 +34,7 @@ interface MenuItemCardProps {
   onEdit?: (item: MenuItem) => void;
   onDelete?: (item: MenuItem) => void;
   onToggleActive?: (item: MenuItem) => void;
+  showAdminControls?: boolean;
 }
 
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -51,8 +54,9 @@ const DietaryBadges = styled(Box)(({ theme }) => ({
   top: theme.spacing(1),
   right: theme.spacing(1),
   display: 'flex',
+  flexDirection: 'column',
   gap: theme.spacing(0.5),
-  zIndex: 1
+  alignItems: 'flex-end'
 }));
 
 const PriceChip = styled(Chip)(({ theme }) => ({
@@ -64,14 +68,60 @@ const PriceChip = styled(Chip)(({ theme }) => ({
   fontWeight: 'bold'
 }));
 
-export const MenuItemCard: React.FC<MenuItemCardProps> = ({
+const MenuItemCard: React.FC<MenuItemCardProps> = ({
   item,
   isLoading = false,
   error,
   onEdit,
   onDelete,
-  onToggleActive
+  onToggleActive,
+  showAdminControls = false
 }) => {
+  const renderDietaryBadges = () => (
+    <DietaryBadges>
+      {item.is_vegetarian && (
+        <Tooltip title="Vegetarian">
+          <Chip
+            icon={<VegetarianIcon />}
+            label="Vegetarian"
+            size="small"
+            color="success"
+          />
+        </Tooltip>
+      )}
+      {item.is_vegan && (
+        <Tooltip title="Vegan">
+          <Chip
+            icon={<VeganIcon />}
+            label="Vegan"
+            size="small"
+            color="success"
+          />
+        </Tooltip>
+      )}
+      {item.is_gluten_free && (
+        <Tooltip title="Gluten Free">
+          <Chip
+            icon={<GlutenFreeIcon />}
+            label="Gluten Free"
+            size="small"
+            color="info"
+          />
+        </Tooltip>
+      )}
+      {item.spice_level > 0 && (
+        <Tooltip title={`Spice Level: ${item.spice_level}`}>
+          <Chip
+            icon={<SpicyIcon />}
+            label={`Spice ${item.spice_level}`}
+            size="small"
+            color="error"
+          />
+        </Tooltip>
+      )}
+    </DietaryBadges>
+  );
+
   if (error) {
     return (
       <StyledCard>
@@ -81,35 +131,6 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
       </StyledCard>
     );
   }
-
-  const renderDietaryBadges = () => (
-    <DietaryBadges>
-      {item.is_vegan && (
-        <Tooltip title="Vegan">
-          <VeganIcon color="success" />
-        </Tooltip>
-      )}
-      {item.is_vegetarian && !item.is_vegan && (
-        <Tooltip title="Vegetarian">
-          <VegetarianIcon color="success" />
-        </Tooltip>
-      )}
-      {item.is_gluten_free && (
-        <Tooltip title="Gluten Free">
-          <GlutenFreeIcon color="info" />
-        </Tooltip>
-      )}
-      {item.spice_level > 0 && (
-        <Tooltip title={`Spice Level: ${item.spice_level}`}>
-          <Stack direction="row">
-            {[...Array(item.spice_level)].map((_, index) => (
-              <SpicyIcon key={index} color="error" fontSize="small" />
-            ))}
-          </Stack>
-        </Tooltip>
-      )}
-    </DietaryBadges>
-  );
 
   if (isLoading) {
     return (
@@ -143,18 +164,20 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
           <Typography variant="h6" component="h2" noWrap>
             {item.name}
           </Typography>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={item.is_active}
-                onChange={() => onToggleActive?.(item)}
-                color="primary"
-                size="small"
-              />
-            }
-            label={item.is_active ? "Active" : "Inactive"}
-            labelPlacement="start"
-          />
+          {showAdminControls && (
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={item.is_active}
+                  onChange={() => onToggleActive?.(item)}
+                  color="primary"
+                  size="small"
+                />
+              }
+              label={item.is_active ? "Active" : "Inactive"}
+              labelPlacement="start"
+            />
+          )}
         </Box>
         <Typography variant="body2" color="text.secondary" paragraph>
           {item.description}
@@ -182,16 +205,26 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
         </Typography>
       </CardContent>
       <Box sx={{ p: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box>
-          <IconButton size="small" onClick={() => onEdit?.(item)} color="primary">
-            <EditIcon />
-          </IconButton>
-          <IconButton size="small" onClick={() => onDelete?.(item)} color="error">
-            <DeleteIcon />
-          </IconButton>
-        </Box>
+        {showAdminControls && (
+          <Box>
+            <IconButton size="small" onClick={() => onEdit?.(item)} color="primary">
+              <EditIcon />
+            </IconButton>
+            <IconButton size="small" onClick={() => onDelete?.(item)} color="error">
+              <DeleteIcon />
+            </IconButton>
+          </Box>
+        )}
         <PriceChip label={`$${item.price.toFixed(2)}`} />
       </Box>
+      {!showAdminControls && (
+        <CardActions sx={{ p: 2, pt: 0 }}>
+          <AddToCartButton menuItem={item} />
+        </CardActions>
+      )}
     </StyledCard>
   );
 };
+
+export { MenuItemCard };
+export default MenuItemCard;

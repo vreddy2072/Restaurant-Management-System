@@ -2,7 +2,7 @@ import pytest
 from datetime import datetime
 from sqlalchemy.orm import Session
 
-from backend.services.user import UserService
+from backend.services.user_service import UserService
 from backend.models.schemas.user import UserCreate, UserUpdate
 
 def test_create_user(db_session: Session):

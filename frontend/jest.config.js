@@ -18,6 +18,11 @@ export default {
     'ts-jest': {
       useESM: true,
     },
+    'import.meta': {
+      env: {
+        VITE_API_URL: 'http://localhost:8000'
+      }
+    },
     'process.env.NODE_ENV': 'test'
   }
-}
+};

@@ -4,7 +4,7 @@ from typing import List
 import logging
 
 from backend.models.schemas.user import UserCreate, UserUpdate, UserResponse, UserLogin
-from backend.services.user import UserService
+from backend.services.user_service import UserService
 from backend.utils.database import get_db
 from backend.utils.auth import create_access_token, get_current_user
 
@@ -96,8 +96,8 @@ async def guest_login(request: Request, db: Session = Depends(get_db)):
         )
 
 @router.get("/me", response_model=UserResponse, tags=["users"])
-async def get_current_user_info(current_user: UserResponse = Depends(get_current_user)):
-    """Get information about the currently logged-in user"""
+async def get_me(current_user: UserResponse = Depends(get_current_user)):
+    """Get current user information"""
     return current_user
 
 @router.put("/me", response_model=UserResponse, tags=["users"])
