@@ -7,24 +7,19 @@
       "config": {
         "runtime": "python3.11",
         "maxLambdaSize": "250mb",
-        "installCommand": "pip install --no-cache-dir -r requirements.txt",
+        "installCommand": "pip install --no-deps --no-cache-dir fastapi uvicorn sqlalchemy pydantic python-dotenv python-jose[cryptography] passlib[bcrypt] python-multipart email-validator",
         "includeFiles": [
-          "requirements.txt",
-          "backend/api/**/*.py",
-          "backend/models/**/*.py",
-          "backend/services/**/*.py",
-          "backend/utils/**/*.py"
+          "backend/api/app.py",
+          "backend/api/routes/*.py",
+          "backend/models/schemas/*.py",
+          "backend/services/*.py",
+          "backend/utils/*.py"
         ],
         "excludeFiles": [
+          "**/__pycache__",
           "**/*.pyc",
-          "**/__pycache__/**",
-          "**/*.pyo",
-          "**/*.pyd",
-          "**/.Python",
-          "**/.env",
-          "**/venv/**",
-          "**/tests/**",
-          "**/.pytest_cache/**"
+          "**/tests",
+          "**/.pytest_cache"
         ]
       }
     },
