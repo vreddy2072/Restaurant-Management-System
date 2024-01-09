@@ -3,14 +3,14 @@
   "installCommand": "cd frontend && npm install --legacy-peer-deps",
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/:path*",
-      "destination": "https://restaurant-management-system-5c3x.onrender.com/:path*"
+      "src": "/api/(.*)",
+      "dest": "https://restaurant-management-system-5c3x.onrender.com/api/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
