@@ -22,6 +22,8 @@ interface Column {
   sortable?: boolean;
 }
 
+export type { Column };
+
 interface TableProps {
   columns: Column[];
   data: any[];

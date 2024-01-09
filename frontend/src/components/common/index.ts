@@ -6,5 +6,4 @@ export { default as Modal } from './Modal';
 export { default as Toast } from './Toast';
 export { default as Table } from './Table';
 export type { Column } from './Table';
-export { default as Toast } from './Toast';
 export type { ToastProps as ToastType } from './Toast'; 
