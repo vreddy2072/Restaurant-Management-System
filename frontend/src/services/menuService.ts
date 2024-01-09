@@ -22,7 +22,7 @@ class MenuService {
     
     console.log('Fetching menu items with params:', params.toString());
     try {
-      const response = await api.get('/api/menu/items/', { params });
+      const response = await api.get('/api/menu/items', { params });
       console.log('Menu items response:', response.data);
       return response.data.map(ensureAbsoluteImageUrl);
     } catch (error) {
@@ -46,7 +46,7 @@ class MenuService {
   async createMenuItem(data: MenuItemCreate): Promise<MenuItem> {
     console.log('Creating menu item with data:', data);
     try {
-      const response = await api.post('/api/menu/items/', data);
+      const response = await api.post('/api/menu/items', data);
       console.log('Create menu item response:', response.data);
       return response.data;
     } catch (error) {
@@ -58,7 +58,7 @@ class MenuService {
   async updateMenuItem(id: number, data: MenuItemUpdate): Promise<MenuItem> {
     console.log(`Updating menu item ${id} with data:`, data);
     try {
-      const response = await api.patch(`/api/menu/items/${id}/`, data);
+      const response = await api.patch(`/api/menu/items/${id}`, data);
       console.log('Update menu item response:', response.data);
       return response.data;
     } catch (error) {
@@ -83,7 +83,7 @@ class MenuService {
     if (activeOnly) params.append('active_only', 'true');
     console.log('Fetching categories with params:', params.toString());
     try {
-      const response = await api.get('/api/menu/categories/', { params });
+      const response = await api.get('/api/menu/categories', { params });
       console.log('Categories response:', response.data);
       return response.data;
     } catch (error) {
@@ -93,29 +93,29 @@ class MenuService {
   }
 
   async getCategory(id: number): Promise<Category> {
-    const response = await api.get(`/api/menu/categories/${id}/`);
+    const response = await api.get(`/api/menu/categories/${id}`);
     return response.data;
   }
 
   async createCategory(data: CategoryCreate): Promise<Category> {
-    const response = await api.post('/api/menu/categories/', data);
+    const response = await api.post('/api/menu/categories', data);
     return response.data;
   }
 
   async updateCategory(id: number, data: CategoryUpdate): Promise<Category> {
-    const response = await api.patch(`/api/menu/categories/${id}/`, data);
+    const response = await api.patch(`/api/menu/categories/${id}`, data);
     return response.data;
   }
 
   async deleteCategory(id: number): Promise<void> {
-    await api.delete(`/api/menu/categories/${id}/`);
+    await api.delete(`/api/menu/categories/${id}`);
   }
 
   async uploadImage(id: number, file: File): Promise<MenuItem> {
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await api.post(`/api/menu/items/${id}/image/`, formData, {
+    const response = await api.post(`/api/menu/items/${id}/image`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -126,7 +126,7 @@ class MenuService {
   async getAllergens(): Promise<Allergen[]> {
     console.log('Fetching allergens...');
     try {
-      const response = await api.get('/api/menu/allergens/');
+      const response = await api.get('/api/menu/allergens');
       console.log('Allergens response:', response.data);
       return response.data;
     } catch (error) {
