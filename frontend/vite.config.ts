@@ -6,11 +6,12 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
     plugins: [react()],
-    base: '/',
+    base: './',
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
-      emptyOutDir: true
+      emptyOutDir: true,
+      sourcemap: false
     },
     define: {
       'import.meta.env.VITE_API_URL': JSON.stringify(env.VITE_API_URL || 'http://localhost:8000')
