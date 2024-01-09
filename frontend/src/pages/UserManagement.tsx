@@ -127,7 +127,7 @@ export const UserManagement: React.FC = () => {
             is_active: userData.is_active
         };
         await userService.updateUser(userData.id, updateData);
-        fetchUsers();
+        loadUsers();
     } catch (error) {
         console.error('Error updating user:', error);
     }

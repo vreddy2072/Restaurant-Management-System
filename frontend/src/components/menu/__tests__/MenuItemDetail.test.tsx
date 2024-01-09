@@ -9,7 +9,7 @@ const mockMenuItem: MenuItem = {
   description: 'Test Description',
   price: 9.99,
   category_id: 1,
-  category: { id: 1, name: 'Test Category' },
+  category: 'Test Category',
   is_vegetarian: true,
   is_vegan: false,
   is_gluten_free: false,
