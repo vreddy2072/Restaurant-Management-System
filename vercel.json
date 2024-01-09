@@ -7,10 +7,10 @@
       "config": {
         "runtime": "python3.11",
         "maxLambdaSize": "15mb",
-        "installCommand": "pip install -r backend/requirements.txt",
+        "installCommand": "pip install -r requirements.txt",
         "includeFiles": [
-          "backend/requirements.txt",
-          "backend/**"
+          "requirements.txt",
+          "backend/**/*.py"
         ]
       }
     },
@@ -31,6 +31,7 @@
     "PYTHON_VERSION": "3.11",
     "NODE_VERSION": "20.x",
     "DATABASE_URL": "sqlite:///backend/database/restaurant.db",
-    "ALLOWED_ORIGINS": "https://*.vercel.app,http://localhost:5173,http://localhost:3000"
+    "ALLOWED_ORIGINS": "https://*.vercel.app,http://localhost:5173,http://localhost:3000",
+    "PYTHONPATH": "/var/task"
   }
 }
