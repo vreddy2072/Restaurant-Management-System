@@ -1,7 +1,9 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, Boolean
-from ...utils.database import Base
+from sqlalchemy.orm import relationship
 import re
+
+from backend.utils.database import Base
 
 class User(Base):
     __tablename__ = "users"
@@ -14,9 +16,16 @@ class User(Base):
     last_name = Column(String(50), nullable=False)
     role = Column(String(20), nullable=False)
     is_active = Column(Boolean, nullable=False, default=True)
+    is_guest = Column(Boolean, nullable=False, default=False)
+    is_admin = Column(Boolean, nullable=False, default=False)
     phone_number = Column(String(20), nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    # Use string references to avoid circular imports
+    shopping_cart = relationship("ShoppingCart", back_populates="user", uselist=False)
+    menu_item_ratings = relationship("MenuItemRating", back_populates="user")
+    restaurant_feedback = relationship("RestaurantFeedback", back_populates="user")
 
     VALID_ROLES = ["admin", "staff", "customer"]
     EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
@@ -45,6 +54,8 @@ class User(Base):
             "last_name": self.last_name,
             "role": self.role,
             "is_active": self.is_active,
+            "is_guest": self.is_guest,
+            "is_admin": self.is_admin,
             "phone_number": self.phone_number,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None

@@ -21,7 +21,7 @@ export default function LoginForm() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, guestLogin } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +33,20 @@ export default function LoginForm() {
     } catch (err) {
       setError('Failed to sign in');
       console.error('Login error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    try {
+      setError('');
+      setLoading(true);
+      await guestLogin();
+      navigate('/menu');
+    } catch (err) {
+      setError('Failed to sign in as guest');
+      console.error('Guest login error:', err);
     } finally {
       setLoading(false);
     }
@@ -122,6 +136,15 @@ export default function LoginForm() {
               </Typography>
             </Divider>
           </Box>
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={handleGuestLogin}
+            disabled={loading}
+            sx={{ mb: 2 }}
+          >
+            Continue as Guest
+          </Button>
           <Link
             component={RouterLink}
             to="/register"

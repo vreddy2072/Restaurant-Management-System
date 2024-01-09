@@ -9,8 +9,12 @@ from pathlib import Path
 from backend.utils.database import SessionLocal, init_db, Base, engine, get_db
 
 from backend.api.app import app
-from backend.models.orm.user import User
 from backend.models.orm.menu import Category, MenuItem, Allergen
+from backend.models.orm.user import User
+from backend.models.orm.shopping_cart import ShoppingCart, CartItem
+from backend.models.orm.rating import MenuItemRating, RestaurantFeedback
+from backend.utils.auth import create_access_token
+from httpx import AsyncClient
 
 # Get the absolute path to the backend directory
 BACKEND_DIR = Path(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -71,6 +75,14 @@ def client(db_session):
     app.dependency_overrides.clear()
 
 @pytest.fixture
+async def async_client(db_session):
+    """Create an async test client"""
+    app.dependency_overrides[get_db] = lambda: db_session
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        yield ac
+    app.dependency_overrides.clear()
+
+@pytest.fixture
 def sample_category(db_session):
     """Create a sample category for testing."""
     from backend.models.orm.menu import Category
@@ -109,3 +121,116 @@ def sample_menu_item(db_session, sample_category):
     db_session.commit()
     db_session.refresh(menu_item)
     return menu_item
+
+@pytest.fixture
+def test_user(db_session):
+    """Create a test user for testing."""
+    user = User(
+        username="testuser",
+        email="test@example.com",
+        password_hash="hashed_password",
+        first_name="Test",
+        last_name="User",
+        role="customer"
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+@pytest.fixture
+def sample_cart(db_session, test_user):
+    """Create a sample shopping cart for testing."""
+    cart = ShoppingCart(user_id=test_user.id)
+    db_session.add(cart)
+    db_session.commit()
+    db_session.refresh(cart)
+    return cart
+
+@pytest.fixture
+def sample_cart_item(db_session, sample_cart, sample_menu_item):
+    """Create a sample cart item for testing."""
+    cart_item = CartItem(
+        cart_id=sample_cart.id,
+        menu_item_id=sample_menu_item.id,
+        quantity=2,
+        customizations={"notes": "Extra spicy"}
+    )
+    db_session.add(cart_item)
+    db_session.commit()
+    db_session.refresh(cart_item)
+    return cart_item
+
+@pytest.fixture
+def sample_menu_item_rating(db_session, test_user, sample_menu_item):
+    """Create a sample menu item rating for testing."""
+    rating = MenuItemRating(
+        user_id=test_user.id,
+        menu_item_id=sample_menu_item.id,
+        rating=4,
+        comment="Great dish!"
+    )
+    db_session.add(rating)
+    db_session.commit()
+    db_session.refresh(rating)
+    return rating
+
+@pytest.fixture
+def sample_restaurant_feedback(db_session, test_user):
+    """Create a sample restaurant feedback for testing."""
+    feedback = RestaurantFeedback(
+        user_id=test_user.id,
+        feedback_text="Excellent service and ambiance",
+        category="service"
+    )
+    db_session.add(feedback)
+    db_session.commit()
+    db_session.refresh(feedback)
+    return feedback
+
+@pytest.fixture
+def test_menu_item(db_session):
+    """Create a test menu item"""
+    category = Category(name="Test Category", description="Test Description")
+    db_session.add(category)
+    db_session.commit()
+
+    menu_item = MenuItem(
+        name="Test Item",
+        description="Test Description",
+        price=9.99,
+        category_id=category.id,
+        is_active=True,
+        image_url="test.jpg"
+    )
+    db_session.add(menu_item)
+    db_session.commit()
+    db_session.refresh(menu_item)
+    return menu_item
+
+@pytest.fixture
+def test_cart(db_session, test_user):
+    """Create a test shopping cart"""
+    cart = ShoppingCart(user_id=test_user.id)
+    db_session.add(cart)
+    db_session.commit()
+    db_session.refresh(cart)
+    return cart
+
+@pytest.fixture
+def test_cart_item(db_session, test_cart, test_menu_item):
+    """Create a test cart item"""
+    cart_item = CartItem(
+        cart_id=test_cart.id,
+        menu_item_id=test_menu_item.id,
+        quantity=1
+    )
+    db_session.add(cart_item)
+    db_session.commit()
+    db_session.refresh(cart_item)
+    return cart_item
+
+@pytest.fixture
+def test_user_token(test_user):
+    """Create a JWT token for the test user"""
+    return create_access_token(data={"sub": test_user.email})

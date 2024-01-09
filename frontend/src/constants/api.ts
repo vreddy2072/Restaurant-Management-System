@@ -5,6 +5,7 @@ export const API_ROUTES = {
   users: {
     register: '/api/users/register',
     login: '/api/users/login',
+    guestLogin: '/api/users/guest-login',
     me: '/api/users/me',
   },
   menu: {

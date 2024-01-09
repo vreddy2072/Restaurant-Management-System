@@ -23,6 +23,8 @@ export interface UserUpdate {
 export interface UserResponse extends UserBase {
   id: number;
   is_active: boolean;
+  is_guest: boolean;
+  is_admin: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -4,6 +4,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.sql.sqltypes import DateTime
 
 from backend.utils.database import Base
+from backend.models.orm.rating import MenuItemRating
 
 # Junction table for menu items and allergens
 menu_item_allergens = Table(
@@ -50,6 +51,7 @@ class MenuItem(Base):
     spice_level = Column(Integer, default=0)
     preparation_time = Column(Integer, nullable=True)  # in minutes
     is_active = Column(Boolean, default=True)
+    is_available = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     customization_options = Column(JSON, default=dict)
@@ -59,6 +61,7 @@ class MenuItem(Base):
 
     category = relationship("Category", back_populates="menu_items")
     allergens = relationship("Allergen", secondary=menu_item_allergens, back_populates="menu_items")
+    ratings = relationship("MenuItemRating", back_populates="menu_item", cascade="all, delete-orphan")
 
     def __init__(self, **kwargs):
         if 'price' in kwargs and kwargs['price'] < 0:
@@ -79,6 +82,7 @@ class MenuItem(Base):
             "spice_level": self.spice_level,
             "preparation_time": self.preparation_time,
             "is_active": self.is_active,
+            "is_available": self.is_available,
             "customization_options": self.customization_options,
             "average_rating": self.average_rating,
             "rating_count": self.rating_count,
