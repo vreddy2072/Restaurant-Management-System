@@ -73,11 +73,16 @@ export const UserManagement: React.FC = () => {
 
   const handleToggleActive = async (user: User) => {
     try {
-      const { id, ...userWithoutId } = user;
-      await userService.updateUser(id, {
-        ...userWithoutId,
+      const updateData = {
+        username: user.username,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        role: user.role,
         is_active: !user.is_active,
-      });
+        phone_number: user.phone_number
+      };
+      await userService.updateUser(user.id, updateData);
       loadUsers();
       showSnackbar('User status updated successfully', 'success');
     } catch (error) {

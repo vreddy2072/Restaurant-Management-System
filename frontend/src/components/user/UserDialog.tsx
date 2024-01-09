@@ -13,6 +13,7 @@ import {
   FormControlLabel,
   Switch,
   Box,
+  SelectChangeEvent,
 } from '@mui/material';
 import { User, UserRole } from '../../types/user';
 
@@ -67,7 +68,7 @@ const UserDialog: React.FC<UserDialogProps> = ({
   }, [user]);
 
   const handleChange = (field: keyof User) => (
-    event: React.ChangeEvent<HTMLInputElement | { value: unknown }>
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setFormData({
       ...formData,
@@ -75,7 +76,7 @@ const UserDialog: React.FC<UserDialogProps> = ({
     });
   };
 
-  const handleRoleChange = (event: SelectChangeEvent<string>) => {
+  const handleRoleChange = (event: SelectChangeEvent) => {
     const role = event.target.value as UserRole;
     setFormData(prev => ({ ...prev, role }));
   };
