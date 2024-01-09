@@ -1,48 +1,47 @@
-from sqlalchemy import create_engine, inspect
+import os
+from pathlib import Path
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from pathlib import Path
-import os
-from dotenv import load_dotenv
+import logging
 
-# Load environment variables
-load_dotenv()
+logger = logging.getLogger(__name__)
 
-# Get the absolute path to the backend directory
-BACKEND_DIR = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Get database URL from environment variable
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///backend/database/restaurant.db")
+logger.info(f"Using database URL: {DATABASE_URL}")
 
 # Ensure database directory exists
-db_path = BACKEND_DIR / "database"
-db_path.mkdir(parents=True, exist_ok=True)
-
-# Database file paths
-DB_FILE = db_path / "restaurant.db"
-TEST_DB_FILE = db_path / "test.db"
-
-# Get database URL from environment variable or use default with absolute path
-if os.getenv("TESTING", "0") == "1":
-    DATABASE_URL = f"sqlite:///{TEST_DB_FILE}"
-    print(f"Using test database at: {TEST_DB_FILE}")
-else:
-    DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_FILE}")
-    print(f"Using database at: {DB_FILE}")
+if DATABASE_URL.startswith("sqlite:///"):
+    db_path = DATABASE_URL.replace("sqlite:///", "")
+    db_dir = os.path.dirname(db_path)
+    Path(db_dir).mkdir(parents=True, exist_ok=True)
+    logger.info(f"Database directory ensured: {db_dir}")
 
 # Create SQLAlchemy engine
 engine = create_engine(
-    DATABASE_URL, 
-    connect_args={"check_same_thread": False}
+    DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    echo=True  # Enable SQL logging
 )
 
+# Create SessionLocal class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# Create Base class
 Base = declarative_base()
 
 def init_db():
-    """Initialize the database by creating all tables."""
-    Base.metadata.create_all(bind=engine)
+    """Initialize the database by creating all tables"""
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables created successfully")
+    except Exception as e:
+        logger.error(f"Error creating database tables: {str(e)}", exc_info=True)
+        raise
 
 def get_db():
-    """Dependency to get database session."""
+    """Get database session"""
     db = SessionLocal()
     try:
         yield db
