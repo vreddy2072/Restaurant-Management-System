@@ -37,7 +37,7 @@ import { menuService } from '../services/menuService';
 import { MenuFilters, MenuFilterValues } from '../components/menu/MenuFilters';
 import { useCart } from '../contexts/CartContext';
 import RatingComponent from '../components/menu/RatingComponent';
-import { ratingService } from '../services/ratingService';
+import { ratingService, RatingAverage } from '../services/ratingService';
 
 const Menu: React.FC = () => {
   const { addToCart, loading: cartLoading } = useCart();
@@ -223,6 +223,7 @@ const Menu: React.FC = () => {
                 <RatingComponent
                   menuItemId={item.id}
                   initialRating={item.average_rating}
+                  initialRatingCount={item.rating_count || 0}
                   onRatingChange={(newRating) => handleRatingChange(item.id, newRating)}
                   onAverageRatingChange={(average) => handleAverageRatingChange(item.id, average)}
                 />

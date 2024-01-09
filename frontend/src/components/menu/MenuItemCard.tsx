@@ -186,6 +186,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
           <RatingComponent
             menuItemId={item.id}
             initialRating={item.average_rating}
+            initialRatingCount={item.rating_count || 0}
             readOnly={showAdminControls}
           />
         </Box>
