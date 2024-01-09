@@ -8,13 +8,27 @@ const API_URL = isDevelopment ? 'http://localhost:8000' : '';
 
 // Helper function to ensure image URLs are absolute
 const ensureAbsoluteImageUrl = (item: MenuItem): MenuItem => {
-  if (item.image_url && !item.image_url.startsWith('http')) {
+  if (!item.image_url) return item;
+  
+  // If it's already an absolute URL, return as is
+  if (item.image_url.startsWith('http')) {
+    return item;
+  }
+
+  // If it's a relative URL starting with /static, append to API URL
+  if (item.image_url.startsWith('/static')) {
+    const baseUrl = isDevelopment ? API_URL : 'https://restaurant-management-system-5c3x.onrender.com';
     return {
       ...item,
-      image_url: `${API_URL}${item.image_url}`
+      image_url: `${baseUrl}${item.image_url}`
     };
   }
-  return item;
+
+  // If it's a relative URL without /static, assume it's a static file
+  return {
+    ...item,
+    image_url: `${API_URL}/static/${item.image_url}`
+  };
 };
 
 class MenuService {

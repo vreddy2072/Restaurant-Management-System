@@ -5,6 +5,7 @@ import os
 import shutil
 from pathlib import Path
 import logging
+from datetime import datetime
 
 from backend.models.schemas.menu import (
     Category, CategoryCreate, CategoryUpdate,
@@ -16,15 +17,19 @@ from backend.models.schemas.menu import (
 from backend.services.menu_service import MenuService
 from backend.utils.database import get_db
 
-router = APIRouter(prefix="/api/menu", tags=["menu"])
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Get base path from environment or use default
+BASE_PATH = os.getenv('STATIC_PATH', os.path.join(os.getcwd(), 'static'))
+IMAGES_DIR = Path(BASE_PATH) / "images"
+logger.info(f"Using images directory: {IMAGES_DIR}")
+
 # Create images directory if it doesn't exist
-IMAGES_DIR = Path("static/images")
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+
+router = APIRouter(prefix="/api/menu", tags=["menu"])
 
 # Category routes
 @router.post("/categories/", response_model=Category, status_code=201)
@@ -240,7 +245,7 @@ def get_full_menu(
 @router.post("/items/{item_id}/image")
 async def upload_menu_item_image(
     item_id: int,
-    file: UploadFile,
+    file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
     """Upload an image for a menu item"""
@@ -255,28 +260,47 @@ async def upload_menu_item_image(
             detail="File must be an image"
         )
     
-    # Create unique filename
-    file_extension = os.path.splitext(file.filename)[1]
-    filename = f"menu_item_{item_id}{file_extension}"
+    # Create unique filename with timestamp to prevent caching issues
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_extension = os.path.splitext(file.filename)[1].lower()
+    if file_extension not in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid image format. Supported formats: jpg, jpeg, png, gif, webp"
+        )
+    
+    filename = f"menu_item_{item_id}_{timestamp}{file_extension}"
     file_path = IMAGES_DIR / filename
     
     # Save file
     try:
+        logger.info(f"Saving image for menu item {item_id} to {file_path}")
         contents = await file.read()
         with file_path.open("wb") as buffer:
             buffer.write(contents)
+        
+        # Delete old image if it exists
+        if item.image_url:
+            old_image_path = IMAGES_DIR / os.path.basename(item.image_url)
+            if old_image_path.exists():
+                old_image_path.unlink()
+        
+        # Update menu item with new image URL
+        image_url = f"/static/images/{filename}"
+        item.image_url = image_url
+        db.commit()
+        db.refresh(item)
+        
+        logger.info(f"Image saved successfully. URL: {image_url}")
+        return {"image_url": image_url}
     except Exception as e:
+        logger.error(f"Error saving image: {str(e)}", exc_info=True)
+        if file_path.exists():
+            file_path.unlink()
         raise HTTPException(
             status_code=500,
-            detail="Could not upload image"
+            detail=f"Could not upload image: {str(e)}"
         )
-    
-    # Update menu item with image URL
-    item.image_url = f"/static/images/{filename}"
-    db.commit()
-    db.refresh(item)
-    
-    return {"image_url": item.image_url}
 
 # Allergen endpoints
 @router.post("/allergens/", response_model=Allergen, status_code=201)
@@ -408,37 +432,55 @@ async def upload_menu_item_image(
     db: Session = Depends(get_db)
 ):
     """Upload an image for a menu item"""
-    # Verify menu item exists
-    menu_item = MenuService.get_menu_item(db, item_id)
+    item = MenuService.get_menu_item(db, item_id)
+    if not item.is_active:
+        raise HTTPException(status_code=404, detail="Menu item not found")
     
-    # Verify file is an image
+    # Validate file type
     if not file.content_type.startswith("image/"):
         raise HTTPException(
             status_code=400,
             detail="File must be an image"
         )
     
-    # Create a unique filename
-    file_extension = file.filename.split(".")[-1]
-    filename = f"menu_item_{item_id}.{file_extension}"
+    # Create unique filename with timestamp to prevent caching issues
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_extension = os.path.splitext(file.filename)[1].lower()
+    if file_extension not in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid image format. Supported formats: jpg, jpeg, png, gif, webp"
+        )
+    
+    filename = f"menu_item_{item_id}_{timestamp}{file_extension}"
     file_path = IMAGES_DIR / filename
     
-    # Save the file
+    # Save file
     try:
+        logger.info(f"Saving image for menu item {item_id} to {file_path}")
+        contents = await file.read()
         with file_path.open("wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            buffer.write(contents)
+        
+        # Delete old image if it exists
+        if item.image_url:
+            old_image_path = IMAGES_DIR / os.path.basename(item.image_url)
+            if old_image_path.exists():
+                old_image_path.unlink()
+        
+        # Update menu item with new image URL
+        image_url = f"/static/images/{filename}"
+        item.image_url = image_url
+        db.commit()
+        db.refresh(item)
+        
+        logger.info(f"Image saved successfully. URL: {image_url}")
+        return {"image_url": image_url}
     except Exception as e:
+        logger.error(f"Error saving image: {str(e)}", exc_info=True)
+        if file_path.exists():
+            file_path.unlink()
         raise HTTPException(
             status_code=500,
             detail=f"Could not upload image: {str(e)}"
-        )
-    finally:
-        file.file.close()
-    
-    # Update menu item with image URL
-    image_url = f"/static/images/{filename}"
-    return MenuService.update_menu_item(
-        db,
-        item_id,
-        MenuItemUpdate(image_url=image_url)
-    ) 
+        ) 
