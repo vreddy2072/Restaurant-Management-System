@@ -82,7 +82,7 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
               {item.menu_item.name}
             </Typography>
             <Typography variant="subtitle1" color="primary">
-              ${(item.unit_price || 0).toFixed(2)}
+              ${(item.menu_item.price || 0).toFixed(2)}
             </Typography>
           </Box>
 
@@ -128,7 +128,7 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
             <Box flex={1} />
 
             <Typography variant="subtitle1" sx={{ mx: 2 }}>
-              ${(item.subtotal || 0).toFixed(2)}
+              ${(item.quantity * (item.menu_item.price || 0)).toFixed(2)}
             </Typography>
 
             <IconButton

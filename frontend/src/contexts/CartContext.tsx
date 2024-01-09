@@ -42,16 +42,27 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Merge menu item data into cart items
       const updatedCart = {
         ...cartData,
-        items: cartData.items.map(item => ({
-          ...item,
-          menu_item: {
-            name: menuItemsMap.get(item.menu_item_id)?.name || 'Unknown Item',
-            description: menuItemsMap.get(item.menu_item_id)?.description || '',
-            image_url: menuItemsMap.get(item.menu_item_id)?.image_url,
-            customization_options: menuItemsMap.get(item.menu_item_id)?.customization_options,
-          }
-        }))
+        items: cartData.items.map(item => {
+          const menuItem = menuItemsMap.get(item.menu_item_id);
+          const unit_price = menuItem?.price || 0;
+          return {
+            ...item,
+            unit_price,
+            subtotal: unit_price * item.quantity,
+            menu_item: {
+              name: menuItem?.name || 'Unknown Item',
+              description: menuItem?.description || '',
+              image_url: menuItem?.image_url,
+              customization_options: menuItem?.customization_options,
+              price: unit_price
+            }
+          };
+        })
       };
+      
+      // Calculate total
+      const total = updatedCart.items.reduce((sum, item) => sum + item.subtotal, 0);
+      updatedCart.total = total;
       
       setCart(updatedCart);
       setError(null);
