@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Color Variables */
+    --color-primary: 220 38 38;    /* red-600 */
+    --color-secondary: 234 88 12;  /* orange-600 */
+    --color-accent: 37 99 235;     /* blue-600 */
+    --color-background: 255 255 255;
+    --color-surface: 249 250 251;  /* gray-50 */
+    --color-text: 17 24 39;        /* gray-900 */
+    --color-text-light: 107 114 128; /* gray-500 */
+    
+    /* Spacing Variables */
+    --header-height: 4rem;
+    --footer-height: 3rem;
+    --sidebar-width: 16rem;
+    
+    /* Animation Variables */
+    --transition-speed: 0.2s;
+  }
+
+  /* Dark mode overrides */
+  .dark {
+    --color-background: 17 24 39;   /* gray-900 */
+    --color-surface: 31 41 55;      /* gray-800 */
+    --color-text: 243 244 246;      /* gray-100 */
+    --color-text-light: 156 163 175; /* gray-400 */
+  }
+}
+
+@layer components {
+  /* Button Styles */
+  .btn {
+    @apply px-4 py-2 rounded-md font-medium transition-colors duration-200;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary/90;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-white hover:bg-secondary/90;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-primary text-primary hover:bg-primary hover:text-white;
+  }
+
+  /* Card Styles */
+  .card {
+    @apply bg-surface rounded-lg shadow-md p-4;
+  }
+  
+  /* Form Styles */
+  .form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50;
+  }
+  
+  .form-label {
+    @apply block text-sm font-medium text-text mb-1;
+  }
+
+  /* Layout Styles */
+  .container-fluid {
+    @apply w-full max-w-7xl mx-auto px-4;
+  }
+  
+  .section {
+    @apply py-8;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-surface;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary/20 rounded-full hover:bg-primary/30;
+} 
