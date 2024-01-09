@@ -49,18 +49,18 @@ const Cart: React.FC = () => {
   }
 
   return (
-    <Box sx={{ pb: { xs: 32, sm: 28 } }}>
+    <Box sx={{ pb: { xs: 16, sm: 14 } }}>
       <Container maxWidth="lg">
         <Box sx={{ position: 'relative' }}>
           <Paper elevation={3}>
-            <Box p={3}>
+            <Box p={2}>
               <Typography variant="h5" gutterBottom>
                 Your Cart
               </Typography>
-              <Divider sx={{ my: 2 }} />
+              <Divider sx={{ my: 1 }} />
               
               <Box sx={{ 
-                maxHeight: 'calc(100vh - 450px)',
+                maxHeight: 'calc(100vh - 200px)',
                 overflowY: 'auto',
                 '&::-webkit-scrollbar': {
                   width: '8px',
@@ -100,34 +100,37 @@ const Cart: React.FC = () => {
         }}
       >
         <Container maxWidth="lg">
-          <Box sx={{ py: 1, px: 2 }}>
-            <CartSummary total={cartTotal} />
-            <Divider sx={{ my: 1 }} />
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: 1,
-              }}
+          <Box 
+            sx={{ 
+              py: 1.5,
+              px: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 2
+            }}
+          >
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={() => clearCart()}
+              size="small"
             >
-              <Button
-                variant="outlined"
-                color="secondary"
-                onClick={() => clearCart()}
-                size="small"
-              >
-                Clear Cart
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                disabled={cart.items.length === 0}
-                size="medium"
-              >
-                Proceed to Checkout
-              </Button>
+              Clear Cart
+            </Button>
+
+            <Box sx={{ flex: 1 }}>
+              <CartSummary total={cartTotal} />
             </Box>
+
+            <Button
+              variant="contained"
+              color="primary"
+              disabled={cart.items.length === 0}
+              size="medium"
+            >
+              Proceed to Checkout
+            </Button>
           </Box>
         </Container>
       </Paper>
