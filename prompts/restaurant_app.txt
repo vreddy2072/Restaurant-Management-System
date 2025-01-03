@@ -1,0 +1,148 @@
+Create a restaurant website application with the following features:
+
+1. User Management
+   - Guest browsing for menu and reviews
+   - User registration and login options:
+     * Traditional email/password authentication
+     * Google OAuth2.0 integration
+     * JWT token-based session management
+   - User profile with order history
+   - Address management for delivery
+   - Social profile linking
+   - Role-based access control (Customer, Admin, Staff)
+
+2. Menu Management
+   - Categorized menu display (Appetizers, Main Entrees, Desserts, Drinks)
+   - Each item includes:
+     * Name, description, price
+     * Dietary indicators (vegetarian, vegan, gluten-free, spicy level)
+     * Allergen information
+     * Photos
+     * Average rating
+     * Customization options (if applicable)
+   - Menu filtering by:
+     * Category
+     * Dietary preferences
+     * Price range
+     * Rating
+
+3. Shopping Cart & Ordering
+   - Add/remove items to cart
+   - Modify quantities
+   - Add special instructions per item
+   - Select pickup/delivery options
+   - Choose preferred time slot
+   - Real-time cart total calculation
+   - Apply promotional codes
+   - Secure checkout process
+
+4. Feedback System
+   - Item-specific reviews:
+     * 5-star rating system
+     * Written reviews
+     * Photos of ordered items
+     * Verified purchase badge
+   - Overall restaurant review:
+     * Service rating
+     * Ambiance rating
+     * Cleanliness rating
+     * Value for money rating
+   - Analytics dashboard for restaurant owners:
+     * Popular items
+     * Rating trends
+     * Customer sentiment analysis
+     * Peak ordering times
+
+5. Additional Features
+   - Table reservation system
+   - Real-time order tracking
+   - Loyalty program
+   - Email notifications for:
+     * Order confirmation
+     * Order status updates
+     * Special promotions
+   - Newsletter subscription
+   - Social media integration
+   - Mobile-responsive design
+   - Multi-language support
+
+6. Data Management & Seeding
+   - Menu data management through JSON:
+     * Standardized JSON schema for menu items
+     * Bulk import/export functionality
+     * Version control for menu updates
+     * Image URL management
+     * Price history tracking
+   - Data seeding scripts:
+     * Initial menu setup
+     * Category management
+     * Dietary preferences
+     * Allergen information
+   - Data validation:
+     * JSON schema validation
+     * Image URL verification
+     * Price format checking
+     * Required field validation
+   - Admin interface for data management:
+     * Manual JSON upload
+     * Real-time preview
+     * Validation feedback
+     * Rollback capability
+
+Technical Requirements:
+- Frontend:
+  * React with TypeScript
+  * Vite for bundling and development
+  * Tailwind CSS for styling
+  * Material-UI for components
+  * Redux for state management
+  * React Query for API data fetching
+  * Responsive design with CSS Grid/Flexbox
+  * Image optimization and lazy loading
+  * Google OAuth2.0 client integration
+
+- Backend:
+  * FastAPI for REST endpoints
+  * SQLite database
+  * SQLAlchemy ORM
+  * Pydantic for validation
+  * JWT authentication
+  * Google OAuth2.0 server integration
+  * JSON schema validation
+  * Data seeding utilities
+
+- Analytics:
+  * Time-series data for order patterns
+  * Review sentiment analysis
+  * Customer behavior tracking
+  * Sales reporting
+  * Popular item insights
+  * Authentication method analytics
+
+- Security:
+  * Input validation
+  * XSS protection
+  * CSRF protection
+  * Rate limiting
+  * Secure payment processing
+  * Data encryption
+  * OAuth2.0 security best practices
+  * Social authentication security
+
+- Performance:
+  * CDN for static assets
+  * API response caching
+  * Database query optimization
+  * Image compression
+  * Lazy loading of components
+  * Bulk data processing optimization
+
+Deployment:
+- Docker containerization
+- CI/CD pipeline
+- Automated testing
+- Monitoring and logging
+- Backup strategy
+- SSL/TLS encryption
+- Environment-specific configurations
+- Secrets management for OAuth credentials 

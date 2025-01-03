@@ -1,0 +1,53 @@
+Follow these practices and use the .cursorrules configuration, to:
+Reduce test setup boilerplate
+Catch common issues earlier
+Make tests more reliable and maintainable
+Speed up the development process
+Ensure consistent test behavior across different environments
+
+1. Test Setup Best Practices:
+Mock all external dependencies (like API calls) in beforeEach
+Provide complete mock data that matches the expected types
+Clean up mocks in afterEach using jest.restoreAllMocks()
+Mock browser APIs (like window.confirm) before they're used
+
+2. Async Testing Patterns:
+Use act() for state updates and rendering
+Use waitFor() to handle asynchronous operations
+Wait for UI elements to appear/disappear before proceeding
+Update mocks before triggering actions that depend on them
+
+3. Common Pitfalls We Encountered:
+Missing fields in mock data causing type errors
+Race conditions when not waiting for state updates
+Browser API mocks not being in place before actions
+Incorrect timing of mock updates
+
+4. Testing React Components:
+Test the complete user interaction flow
+Verify both UI updates and data operations
+Handle form inputs, dialogs, and async operations properly
+Use proper selectors (like getByLabelText for form fields)
+
+5. Best Practices for Future Tests:
+Start with a complete test plan before writing code
+Create reusable mock data and helper functions
+Structure tests in a logical order (setup → action → verification)
+Use meaningful test descriptions
+Keep tests focused and independent
+Handle all async operations properly
+Add proper error handling tests
+
+6. Development Workflow:
+Write tests alongside component development
+Run tests frequently to catch issues early
+Use test-driven development (TDD) when appropriate
+Keep test files organized and well-documented
+
+7. Performance Considerations:
+Group related tests to minimize setup/teardown overhead
+Use appropriate timeouts for async operations
+Mock heavy operations and external dependencies
+Consider using test fixtures for complex data
+
+
