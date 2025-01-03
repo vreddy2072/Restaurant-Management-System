@@ -17,6 +17,8 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   List,
+  Drawer,
+  Button,
   Fab
 } from '@mui/material';
 import {
@@ -25,13 +27,15 @@ import {
   Clear as ClearIcon,
   ViewModule as GridIcon,
   ViewList as ListIcon,
+  TuneOutlined as FilterSettingsIcon,
   Add as AddIcon
 } from '@mui/icons-material';
 import { MenuItemCard } from './MenuItemCard';
 import { MenuItemListView } from './MenuItemListView';
 import { menuService } from '../../services/menuService';
-import type { MenuItem, Category} from '../../types/menu';
+import type { MenuItem, Category } from '../../types/menu';
 import { MenuItemDialog } from './MenuItemDialog';
+import { MenuFilters } from './MenuFilters';
 
 export const MenuItemList: React.FC = () => {
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -41,6 +45,18 @@ export const MenuItemList: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<{
+    dietary: string[];
+    allergens: string[];
+    priceRange: [number, number];
+    rating: number;
+  }>({
+    dietary: [],
+    allergens: [],
+    priceRange: [0, 100],
+    rating: 0
+  });
   const [filters, setFilters] = useState({
     search: '',
     category: 'all',
@@ -48,26 +64,71 @@ export const MenuItemList: React.FC = () => {
     sort: 'name'
   });
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [menuItems, categoryList] = await Promise.all([
-        menuService.getMenuItems(),
-        menuService.getCategories()
-      ]);
-      setItems(menuItems);
-      setCategories(categoryList);
-    } catch (error) {
-      setError('Failed to load data. Please try again.');
-      console.error('Failed to load data:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handleFilterChange = (newFilters: any) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      dietary: [
+        ...(newFilters.is_vegetarian ? ['vegetarian'] : []),
+        ...(newFilters.is_vegan ? ['vegan'] : []),
+        ...(newFilters.is_gluten_free ? ['gluten_free'] : [])
+      ],
+      allergens: newFilters.allergen_exclude || [],
+      priceRange: [newFilters.min_price || 0, newFilters.max_price || 100],
+      rating: newFilters.min_rating || 0
+    }));
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const getAllergens = () => {
+    const allergenSet = new Set<string>();
+    items.forEach(item => {
+      console.log('Processing item:', item.name, 'allergens:', item.allergens); // Debug log
+      if (Array.isArray(item.allergens)) {
+        item.allergens.forEach(allergen => {
+          if (allergen && allergen.name) allergenSet.add(allergen.name);
+        });
+      }
+    });
+    const allergens = Array.from(allergenSet);
+    console.log('Final allergens list:', allergens); // Debug log
+    return allergens;
+  };
+
+  const filterItems = () => {
+    return items.filter(item => {
+      // Search filter
+      const matchesSearch = item.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+        item.description.toLowerCase().includes(filters.search.toLowerCase());
+
+      // Category filter
+      const matchesCategory = filters.category === 'all' || item.category_id === Number(filters.category);
+
+      // Dietary preferences
+      const matchesDietary = activeFilters.dietary.length === 0 || activeFilters.dietary.every(pref => {
+        switch (pref) {
+          case 'vegetarian': return item.is_vegetarian;
+          case 'vegan': return item.is_vegan;
+          case 'gluten_free': return item.is_gluten_free;
+          default: return true;
+        }
+      });
+
+      // Allergens
+      const matchesAllergens = activeFilters.allergens.length === 0 ||
+        !activeFilters.allergens.some(allergen => 
+          item.allergens.some(itemAllergen => itemAllergen.name === allergen)
+        );
+
+      // Price range
+      const matchesPrice = item.price >= activeFilters.priceRange[0] &&
+        item.price <= activeFilters.priceRange[1];
+
+      // Rating
+      const matchesRating = item.average_rating >= activeFilters.rating;
+
+      return matchesSearch && matchesCategory && matchesDietary && 
+        matchesAllergens && matchesPrice && matchesRating;
+    });
+  };
 
   const handleEdit = (item: MenuItem) => {
     setSelectedItem(item);
@@ -127,10 +188,6 @@ export const MenuItemList: React.FC = () => {
     }
   };
 
-  const handleFilterChange = (key: string, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
   const handleViewModeChange = (
     event: React.MouseEvent<HTMLElement>,
     newMode: 'grid' | 'list' | null
@@ -161,72 +218,86 @@ export const MenuItemList: React.FC = () => {
     </ToggleButtonGroup>
   );
 
-  const filterItems = () => {
-    const filteredItems = items
-      .filter(item => {
-        const matchesSearch = item.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-          item.description.toLowerCase().includes(filters.search.toLowerCase());
-        const matchesCategory = filters.category === 'all' || item.category_id === Number(filters.category);
-        const matchesDietary = filters.dietary.length === 0 || filters.dietary.every(pref => {
-          switch (pref) {
-            case 'vegan': return item.is_vegan;
-            case 'vegetarian': return item.is_vegetarian;
-            case 'gluten_free': return item.is_gluten_free;
-            default: return true;
-          }
-        });
-        return matchesSearch && matchesCategory && matchesDietary;
-      })
-      .sort((a, b) => {
-        switch (filters.sort) {
-          case 'name': return a.name.localeCompare(b.name);
-          case 'price': return a.price - b.price;
-          case 'rating': return b.average_rating - a.average_rating;
-          default: return 0;
-        }
-      });
-    return filteredItems;
-  };
-
   const renderFilterBar = () => (
-    <Box sx={{ mb: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
-      <TextField
-        size="small"
-        placeholder="Search menu items..."
-        value={filters.search}
-        onChange={(e) => handleFilterChange('search', e.target.value)}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon />
-            </InputAdornment>
-          ),
-          endAdornment: filters.search && (
-            <InputAdornment position="end">
-              <IconButton size="small" onClick={() => handleFilterChange('search', '')}>
-                <ClearIcon />
-              </IconButton>
-            </InputAdornment>
-          )
-        }}
-        sx={{ flexGrow: 1 }}
-      />
-      <FormControl size="small" sx={{ minWidth: 120 }}>
-        <InputLabel>Category</InputLabel>
-        <Select
-          value={filters.category}
-          onChange={(e) => handleFilterChange('category', e.target.value)}
-          label="Category"
-        >
-          <MuiMenuItem value="all">All Categories</MuiMenuItem>
-          {categories.map((category) => (
-            <MuiMenuItem key={category.id} value={category.id}>
-              {category.name}
-            </MuiMenuItem>
-          ))}
-        </Select>
-      </FormControl>
-      {renderViewToggle()}
+    <Box sx={{ mb: 3 }}>
+      <Paper sx={{ p: 2 }}>
+        <Stack spacing={2}>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <TextField
+              size="small"
+              placeholder="Search menu items..."
+              value={filters.search}
+              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+                endAdornment: filters.search && (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => setFilters(prev => ({ ...prev, search: '' }))}>
+                      <ClearIcon />
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+              sx={{ flexGrow: 1 }}
+            />
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={filters.category}
+                onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+                label="Category"
+              >
+                <MuiMenuItem value="all">All Categories</MuiMenuItem>
+                {categories.map((category) => (
+                  <MuiMenuItem key={category.id} value={category.id}>
+                    {category.name}
+                  </MuiMenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Button
+              variant="outlined"
+              startIcon={<FilterSettingsIcon />}
+              onClick={() => setFilterDrawerOpen(true)}
+            >
+              Filters
+            </Button>
+            {renderViewToggle()}
+          </Box>
+          {(activeFilters.dietary.length > 0 || activeFilters.allergens.length > 0) && (
+            <Stack direction="row" spacing={1} flexWrap="wrap">
+              {activeFilters.dietary.map((filter) => (
+                <Chip
+                  key={filter}
+                  label={filter.replace('_', ' ')}
+                  onDelete={() => {
+                    setActiveFilters(prev => ({
+                      ...prev,
+                      dietary: prev.dietary.filter(f => f !== filter)
+                    }));
+                  }}
+                />
+              ))}
+              {activeFilters.allergens.map((allergen) => (
+                <Chip
+                  key={allergen}
+                  label={`No ${allergen}`}
+                  onDelete={() => {
+                    setActiveFilters(prev => ({
+                      ...prev,
+                      allergens: prev.allergens.filter(a => a !== allergen)
+                    }));
+                  }}
+                />
+              ))}
+            </Stack>
+          )}
+        </Stack>
+      </Paper>
     </Box>
   );
 
@@ -273,6 +344,29 @@ export const MenuItemList: React.FC = () => {
     );
   };
 
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [menuItems, categoryList] = await Promise.all([
+        menuService.getMenuItems(),
+        menuService.getCategories()
+      ]);
+      setItems(menuItems);
+      setCategories(categoryList);
+      console.log('Menu Items loaded:', menuItems); // Debug log
+      console.log('Available Allergens:', getAllergens()); // Debug log
+    } catch (error) {
+      setError('Failed to load data. Please try again.');
+      console.error('Failed to load data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   return (
     <Box sx={{ p: 3 }}>
       {renderFilterBar()}
@@ -284,6 +378,18 @@ export const MenuItemList: React.FC = () => {
         onClose={handleDialogClose}
         onSave={handleDialogSave}
       />
+      <Drawer
+        anchor="right"
+        open={filterDrawerOpen}
+        onClose={() => setFilterDrawerOpen(false)}
+      >
+        <Box sx={{ width: 300, p: 3 }}>
+          <MenuFilters
+            onFilterChange={handleFilterChange}
+            availableAllergens={getAllergens()}
+          />
+        </Box>
+      </Drawer>
       <Fab 
         color="primary" 
         sx={{ position: 'fixed', bottom: 16, right: 16 }}

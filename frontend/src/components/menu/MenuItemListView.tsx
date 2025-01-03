@@ -143,7 +143,7 @@ export const MenuItemListView: React.FC<MenuItemListViewProps> = ({
       <ListItemText
         primary={
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant="h6" component="span">
+            <Typography variant="h6" component="div">
               {item.name}
             </Typography>
             <PriceChip
@@ -153,12 +153,12 @@ export const MenuItemListView: React.FC<MenuItemListViewProps> = ({
           </Box>
         }
         secondary={
-          <Stack spacing={1}>
-            <Typography variant="body2" color="text.secondary">
+          <Box component="div">
+            <Typography variant="body2" color="text.secondary" component="div" gutterBottom>
               {item.description}
             </Typography>
             {renderDietaryIcons()}
-          </Stack>
+          </Box>
         }
       />
     </StyledListItem>

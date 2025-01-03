@@ -168,11 +168,12 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
         <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 1 }}>
           {item.allergens.map((allergen) => (
             <Chip
-              key={allergen}
-              label={allergen}
+              key={allergen.id}
+              label={allergen.name}
               size="small"
               variant="outlined"
               color="warning"
+              title={allergen.description}
             />
           ))}
         </Box>

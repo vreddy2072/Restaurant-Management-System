@@ -3,7 +3,7 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "restaurant-app"
+name = "Restaurant Management System"
 version = "0.1.0"
 description = "Restaurant Application"
 authors = [
