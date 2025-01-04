@@ -7,7 +7,7 @@ from alembic import context
 
 from backend.utils.database import Base
 from backend.models.orm.menu import Category, MenuItem, Allergen  # Import all models
-from backend.app.models.user import User  # Import User model
+from backend.models.orm.user import User  # Import User model
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

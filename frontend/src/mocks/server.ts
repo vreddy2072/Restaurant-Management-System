@@ -1,6 +1,8 @@
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 
+const API_URL = 'http://localhost:8000';
+
 // Mock data store
 let categories = [
   {
@@ -26,9 +28,73 @@ let menuItems = [
   },
 ];
 
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+let users: User[] = [];
+
 export const server = setupServer(
+  // Auth endpoints
+  rest.post(`${API_URL}/api/users/register`, async (req, res, ctx) => {
+    const data = await req.json();
+    if (!data.email || !data.password || !data.first_name || !data.last_name || !data.role) {
+      return res(
+        ctx.status(400),
+        ctx.json({ detail: 'All fields are required' })
+      );
+    }
+
+    const newUser = {
+      id: users.length + 1,
+      username: data.username,
+      email: data.email,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      role: data.role,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    users.push(newUser);
+    return res(ctx.status(201), ctx.json(newUser));
+  }),
+
+  rest.post(`${API_URL}/api/users/login`, async (req, res, ctx) => {
+    const data = await req.json();
+    if (!data.email || !data.password) {
+      return res(
+        ctx.status(400),
+        ctx.json({ detail: 'Email and password are required' })
+      );
+    }
+
+    const user = users.find(u => u.email === data.email);
+    if (!user) {
+      return res(
+        ctx.status(401),
+        ctx.json({ detail: 'Invalid credentials' })
+      );
+    }
+
+    return res(ctx.json({
+      access_token: 'mock_jwt_token',
+      token_type: 'Bearer',
+      user: user
+    }));
+  }),
+
   // Category endpoints
-  rest.get('http://localhost:8000/menu/categories/', (req, res, ctx) => {
+  rest.get(`${API_URL}/api/menu/categories/`, (req, res, ctx) => {
     const activeOnly = req.url.searchParams.get('active_only') === 'true';
     let filteredCategories = categories;
     if (activeOnly) {
@@ -37,7 +103,7 @@ export const server = setupServer(
     return res(ctx.json(filteredCategories));
   }),
 
-  rest.post('http://localhost:8000/menu/categories/', async (req, res, ctx) => {
+  rest.post(`${API_URL}/api/menu/categories/`, async (req, res, ctx) => {
     const data = await req.json();
     if (!data.name) {
       return res(ctx.status(400), ctx.json({ detail: 'Name is required' }));
@@ -56,7 +122,7 @@ export const server = setupServer(
     return res(ctx.json(newCategory));
   }),
 
-  rest.put('http://localhost:8000/menu/categories/:id', async (req, res, ctx) => {
+  rest.put(`${API_URL}/api/menu/categories/:id`, async (req, res, ctx) => {
     const { id } = req.params;
     const data = await req.json();
     const index = categories.findIndex(c => c.id === Number(id));
@@ -74,14 +140,14 @@ export const server = setupServer(
     return res(ctx.json(categories[index]));
   }),
 
-  rest.delete('http://localhost:8000/menu/categories/:id', (req, res, ctx) => {
+  rest.delete(`${API_URL}/api/menu/categories/:id`, (req, res, ctx) => {
     const { id } = req.params;
     categories = categories.filter(c => c.id !== Number(id));
     return res(ctx.status(204));
   }),
 
   // Menu item endpoints
-  rest.get('http://localhost:8000/menu/items/', (req, res, ctx) => {
+  rest.get(`${API_URL}/api/menu/items/`, (req, res, ctx) => {
     const categoryId = req.url.searchParams.get('category_id');
     const activeOnly = req.url.searchParams.get('active_only') === 'true';
     
@@ -96,7 +162,7 @@ export const server = setupServer(
     return res(ctx.json(filteredItems));
   }),
 
-  rest.post('http://localhost:8000/menu/items/', async (req, res, ctx) => {
+  rest.post(`${API_URL}/api/menu/items/`, async (req, res, ctx) => {
     const data = await req.json();
     if (!data.name || !data.price || !data.category_id) {
       return res(
@@ -120,7 +186,7 @@ export const server = setupServer(
     return res(ctx.json(newItem));
   }),
 
-  rest.put('http://localhost:8000/menu/items/:id', async (req, res, ctx) => {
+  rest.put(`${API_URL}/api/menu/items/:id`, async (req, res, ctx) => {
     const { id } = req.params;
     const data = await req.json();
     const index = menuItems.findIndex(i => i.id === Number(id));
@@ -138,9 +204,9 @@ export const server = setupServer(
     return res(ctx.json(menuItems[index]));
   }),
 
-  rest.delete('http://localhost:8000/menu/items/:id', (req, res, ctx) => {
+  rest.delete(`${API_URL}/api/menu/items/:id`, (req, res, ctx) => {
     const { id } = req.params;
     menuItems = menuItems.filter(i => i.id !== Number(id));
     return res(ctx.status(204));
-  })
-); 
+  }),
+);
