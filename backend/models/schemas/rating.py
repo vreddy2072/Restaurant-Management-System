@@ -25,6 +25,9 @@ class MenuItemRating(MenuItemRatingBase):
     class Config:
         from_attributes = True
 
+class MenuItemRatingResponse(MenuItemRating):
+    pass
+
 class RestaurantFeedbackBase(BaseModel):
     feedback_text: str = Field(..., min_length=1, max_length=1000)
     category: str

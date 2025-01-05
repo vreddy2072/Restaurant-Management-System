@@ -36,6 +36,7 @@ import { MenuItem as MenuItemType } from '../types/menu';
 import { menuService } from '../services/menuService';
 import { MenuFilters, MenuFilterValues } from '../components/menu/MenuFilters';
 import { useCart } from '../contexts/CartContext';
+import RatingComponent from '../components/menu/RatingComponent';
 
 const Menu: React.FC = () => {
   const { addToCart, loading: cartLoading } = useCart();
@@ -52,25 +53,24 @@ const Menu: React.FC = () => {
     allergen_exclude: []
   });
 
-  useEffect(() => {
-    fetchMenuItems();
-  }, []);
-
-  const fetchMenuItems = async () => {
+  const fetchMenuItems = React.useCallback(async () => {
     try {
-      setLoading(true);
-      console.log('Fetching menu items...');
       const items = await menuService.getMenuItems();
-      console.log('Received menu items:', items);
       setMenuItems(items);
       setError(null);
     } catch (err) {
       console.error('Error fetching menu items:', err);
-      setError('Failed to load menu items');
+      setError('Failed to load menu items. Please try again later.');
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Empty dependency array since menuService is stable
+
+  useEffect(() => {
+    if (loading) {
+      fetchMenuItems();
+    }
+  }, [loading, fetchMenuItems]);
 
   const getAllergens = () => {
     const allergenSet = new Set<string>();
@@ -88,46 +88,36 @@ const Menu: React.FC = () => {
     setActiveFilters(newFilters);
   };
 
-  const filteredMenuItems = menuItems
-    .filter(item => {
-      // Search filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        return (
-          item.name.toLowerCase().includes(query) ||
-          item.description.toLowerCase().includes(query)
+  const filteredMenuItems = React.useMemo(() => {
+    return menuItems.filter(item => {
+      // Apply search filter
+      const matchesSearch = !searchQuery || 
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Apply category filter
+      const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+
+      // Apply dietary filters
+      const matchesDietary = (
+        (!activeFilters.is_vegetarian || item.is_vegetarian) &&
+        (!activeFilters.is_vegan || item.is_vegan) &&
+        (!activeFilters.is_gluten_free || item.is_gluten_free)
+      );
+
+      // Apply allergen filters
+      const matchesAllergens = !activeFilters.allergen_exclude?.length || 
+        !item.allergens?.some(allergen => 
+          activeFilters.allergen_exclude.includes(allergen.name)
         );
-      }
-      return true;
-    })
-    .filter(item => {
-      // Category filter
-      if (categoryFilter === 'all') return true;
-      return item.category === categoryFilter;
-    })
-    .filter(item => {
-      // Dietary filters
-      if (activeFilters.is_vegetarian && !item.is_vegetarian) return false;
-      if (activeFilters.is_vegan && !item.is_vegan) return false;
-      if (activeFilters.is_gluten_free && !item.is_gluten_free) return false;
 
-      // Price range
-      if (activeFilters.min_price !== undefined && item.price < activeFilters.min_price) return false;
-      if (activeFilters.max_price !== undefined && item.price > activeFilters.max_price) return false;
+      // Apply rating filter
+      const matchesRating = !activeFilters.min_rating || 
+        (item.average_rating && item.average_rating >= activeFilters.min_rating);
 
-      // Rating
-      if (activeFilters.min_rating !== undefined && item.average_rating < activeFilters.min_rating) return false;
-
-      // Allergens
-      if (activeFilters.allergen_exclude.length > 0) {
-        const itemAllergens = item.allergens?.map(a => a.name) || [];
-        if (activeFilters.allergen_exclude.some(allergen => itemAllergens.includes(allergen))) {
-          return false;
-        }
-      }
-
-      return true;
+      return matchesSearch && matchesCategory && matchesDietary && matchesAllergens && matchesRating;
     });
+  }, [menuItems, searchQuery, categoryFilter, activeFilters]);
 
   const categories = ['all', ...new Set(menuItems
     .filter(item => item.category)
@@ -192,6 +182,21 @@ const Menu: React.FC = () => {
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                 {item.description}
               </Typography>
+              <Box sx={{ mt: 1 }}>
+                <RatingComponent
+                  menuItemId={item.id}
+                  initialRating={item.average_rating}
+                  onRatingChange={(newRating) => {
+                    // Update the item's rating in the local state
+                    const updatedItems = menuItems.map(menuItem => 
+                      menuItem.id === item.id 
+                        ? { ...menuItem, average_rating: newRating }
+                        : menuItem
+                    );
+                    setMenuItems(updatedItems);
+                  }}
+                />
+              </Box>
               <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
                 {item.is_vegetarian && (
                   <Typography variant="caption" sx={{ color: 'success.main' }}>

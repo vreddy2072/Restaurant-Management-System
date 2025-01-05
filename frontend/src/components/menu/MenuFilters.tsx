@@ -6,7 +6,10 @@ import {
   Checkbox,
   Slider,
   Typography,
+  Rating,
+  Stack
 } from '@mui/material';
+import { Star as StarIcon } from '@mui/icons-material';
 
 interface MenuFiltersProps {
   onFilterChange: (filters: MenuFilterValues) => void;
@@ -49,37 +52,42 @@ export const MenuFilters: React.FC<MenuFiltersProps> = ({
 
   return (
     <Box>
-      <FormGroup>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={filters.is_vegetarian}
-              onChange={(e) => handleChange('is_vegetarian', e.target.checked)}
-            />
-          }
-          label="Vegetarian"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={filters.is_vegan}
-              onChange={(e) => handleChange('is_vegan', e.target.checked)}
-            />
-          }
-          label="Vegan"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={filters.is_gluten_free}
-              onChange={(e) => handleChange('is_gluten_free', e.target.checked)}
-            />
-          }
-          label="Gluten Free"
-        />
-      </FormGroup>
+      <Typography variant="h6" gutterBottom>Filters</Typography>
+      
+      <Box sx={{ mb: 3 }}>
+        <Typography gutterBottom>Dietary Preferences</Typography>
+        <FormGroup>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={filters.is_vegetarian}
+                onChange={(e) => handleChange('is_vegetarian', e.target.checked)}
+              />
+            }
+            label="Vegetarian"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={filters.is_vegan}
+                onChange={(e) => handleChange('is_vegan', e.target.checked)}
+              />
+            }
+            label="Vegan"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={filters.is_gluten_free}
+                onChange={(e) => handleChange('is_gluten_free', e.target.checked)}
+              />
+            }
+            label="Gluten Free"
+          />
+        </FormGroup>
+      </Box>
 
-      <Box sx={{ mt: 2 }}>
+      <Box sx={{ mb: 3 }}>
         <Typography gutterBottom>Price Range</Typography>
         <Box sx={{ px: 2 }}>
           <Slider
@@ -90,6 +98,7 @@ export const MenuFilters: React.FC<MenuFiltersProps> = ({
               handleChange('max_price', max);
             }}
             valueLabelDisplay="auto"
+            valueLabelFormat={(value) => `$${value}`}
             min={0}
             max={100}
             step={5}
@@ -97,21 +106,22 @@ export const MenuFilters: React.FC<MenuFiltersProps> = ({
         </Box>
       </Box>
 
-      <Box sx={{ mt: 2 }}>
+      <Box sx={{ mb: 3 }}>
         <Typography gutterBottom>Minimum Rating</Typography>
-        <Box sx={{ px: 2 }}>
-          <Slider
+        <Stack spacing={1} alignItems="center">
+          <Rating
             value={filters.min_rating || 0}
             onChange={(_, value) => handleChange('min_rating', value)}
-            valueLabelDisplay="auto"
-            min={0}
-            max={5}
-            step={0.5}
+            precision={0.5}
+            emptyIcon={<StarIcon style={{ opacity: 0.55 }} fontSize="inherit" />}
           />
-        </Box>
+          <Typography variant="body2" color="text.secondary">
+            {filters.min_rating ? `${filters.min_rating} stars and up` : 'No minimum rating'}
+          </Typography>
+        </Stack>
       </Box>
 
-      <Box sx={{ mt: 2 }}>
+      <Box sx={{ mb: 3 }}>
         <Typography gutterBottom>Exclude Allergens</Typography>
         <FormGroup>
           {(availableAllergens || []).length > 0 ? (
