@@ -78,13 +78,11 @@ function App() {
         <AuthProvider>
           <CartProvider>
             <Box sx={{ 
-              display: 'flex', 
-              flexDirection: 'column',
               minHeight: '100vh',
               bgcolor: 'background.default'
             }}>
               <NavBar />
-              <Container component="main" sx={{ mt: 4, mb: 4, flex: 1 }}>
+              <Container component="main" sx={{ mt: 4, mb: 4 }}>
                 <Routes>
                   <Route path="/register" element={<RegisterForm />} />
                   <Route path="/login" element={<LoginForm />} />

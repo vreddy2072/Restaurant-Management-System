@@ -19,7 +19,9 @@ import {
   List,
   Drawer,
   Button,
-  Fab
+  Fab,
+  CircularProgress,
+  Typography
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -44,7 +46,7 @@ export const MenuItemList: React.FC = () => {
   const [error, setError] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<{
     dietary: string[];
@@ -225,14 +227,14 @@ export const MenuItemList: React.FC = () => {
       size="small"
       aria-label="view mode"
     >
-      <ToggleButton value="grid" aria-label="grid view">
-        <Tooltip title="Grid View">
-          <GridIcon />
-        </Tooltip>
-      </ToggleButton>
       <ToggleButton value="list" aria-label="list view">
         <Tooltip title="List View">
           <ListIcon />
+        </Tooltip>
+      </ToggleButton>
+      <ToggleButton value="grid" aria-label="grid view">
+        <Tooltip title="Grid View">
+          <GridIcon />
         </Tooltip>
       </ToggleButton>
     </ToggleButtonGroup>
@@ -356,6 +358,7 @@ export const MenuItemList: React.FC = () => {
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onToggleActive={handleToggleActive}
+                showAdminControls={true}
               />
             </Grid>
           ))}
@@ -403,36 +406,155 @@ export const MenuItemList: React.FC = () => {
   }, []);
 
   return (
-    <Box sx={{ p: 3 }}>
-      {renderFilterBar()}
-      {renderContent()}
+    <Box>
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Stack spacing={2}>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <TextField
+              size="small"
+              placeholder="Search menu items..."
+              value={filters.search}
+              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ flex: 1 }}
+            />
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={filters.category}
+                label="Category"
+                onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+              >
+                <MuiMenuItem value="all">All Categories</MuiMenuItem>
+                {categories.map((category) => (
+                  <MuiMenuItem key={category.id} value={category.id}>
+                    {category.name}
+                  </MuiMenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            {renderViewToggle()}
+            <Button
+              variant="outlined"
+              startIcon={<FilterSettingsIcon />}
+              onClick={() => setFilterDrawerOpen(true)}
+              size="medium"
+            >
+              Filters
+            </Button>
+          </Box>
+          {activeFilters.dietary.length > 0 && (
+            <Stack direction="row" spacing={1}>
+              {activeFilters.dietary.map((pref) => (
+                <Chip
+                  key={pref}
+                  label={pref}
+                  onDelete={() => {
+                    setActiveFilters(prev => ({
+                      ...prev,
+                      dietary: prev.dietary.filter(p => p !== pref)
+                    }));
+                  }}
+                />
+              ))}
+            </Stack>
+          )}
+        </Stack>
+      </Paper>
+
+      <Box sx={{ position: 'relative', minHeight: 200 }}>
+        {loading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        ) : (
+          <>
+            {viewMode === 'grid' ? (
+              <Grid container spacing={2}>
+                {filterItems().map((item) => (
+                  <Grid item xs={12} sm={6} md={4} lg={3} key={item.id}>
+                    <MenuItemCard
+                      item={item}
+                      onEdit={() => handleEdit(item)}
+                      onDelete={() => handleDelete(item)}
+                      onToggleActive={() => handleToggleActive(item)}
+                      showAdminControls={true}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            ) : (
+              <List>
+                {filterItems().map((item) => (
+                  <MenuItemListView
+                    key={item.id}
+                    item={item}
+                    onEdit={() => handleEdit(item)}
+                    onDelete={() => handleDelete(item)}
+                    onToggleActive={() => handleToggleActive(item)}
+                  />
+                ))}
+              </List>
+            )}
+          </>
+        )}
+      </Box>
+
+      <Fab
+        color="primary"
+        aria-label="add"
+        onClick={handleAddItem}
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+        }}
+      >
+        <AddIcon />
+      </Fab>
+
       <MenuItemDialog
         open={dialogOpen}
-        item={selectedItem}
-        categories={categories}
         onClose={handleDialogClose}
         onSave={handleDialogSave}
+        item={selectedItem}
+        categories={categories}
       />
+
       <Drawer
         anchor="right"
         open={filterDrawerOpen}
         onClose={() => setFilterDrawerOpen(false)}
       >
         <Box sx={{ width: 300, p: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Filters
+          </Typography>
           <MenuFilters
             onFilterChange={handleFilterChange}
             availableAllergens={getAllergens()}
           />
+          <Box sx={{ mt: 3 }}>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={() => setFilterDrawerOpen(false)}
+            >
+              Apply Filters
+            </Button>
+          </Box>
         </Box>
       </Drawer>
-      <Fab 
-        color="primary" 
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
-        onClick={handleAddItem}
-        aria-label="add menu item"
-      >
-        <AddIcon />
-      </Fab>
     </Box>
   );
 };
