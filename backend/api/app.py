@@ -20,6 +20,7 @@ from backend.models.schemas.user import UserCreate, UserUpdate, UserResponse, Us
 from backend.services.user import UserService
 from backend.utils.auth import create_access_token, get_current_user
 from backend.api.routes.menu import router as menu_router
+from backend.api.routes.cart import router as cart_router
 
 # Load environment variables
 load_dotenv()
@@ -43,7 +44,7 @@ app.add_middleware(
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["*"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With", "Access-Control-Allow-Origin"],
     expose_headers=["*"],
     max_age=3600,
 )
@@ -90,17 +91,16 @@ def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
 
 @user_router.post("/login", response_model=dict)
 async def login_user(
-    email: str = Form(...),  
-    password: str = Form(...),
+    user_login: UserLogin,
     db: Session = Depends(get_db)
 ):
     """Authenticate a user and return a token"""
     try:
-        logger.debug(f"Login attempt for email: {email}")  
+        logger.debug(f"Login attempt for email: {user_login.email}")  
         service = UserService(db)
-        user = service.authenticate_user(email, password)  
+        user = service.authenticate_user(user_login.email, user_login.password)  
         if not user:
-            logger.warning(f"Failed login attempt for email: {email}")
+            logger.warning(f"Failed login attempt for email: {user_login.email}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password"
@@ -108,7 +108,7 @@ async def login_user(
         
         # Create access token
         token = create_access_token(data={"sub": user.email})
-        logger.info(f"Successful login for user: {email}")
+        logger.info(f"Successful login for user: {user_login.email}")
         return {
             "access_token": token,
             "token_type": "bearer",
@@ -121,6 +121,51 @@ async def login_user(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred during login"
+        )
+
+@user_router.post("/guest-login", tags=["users"])
+async def guest_login(request: Request, db: Session = Depends(get_db)):
+    """Create and login as a guest user"""
+    try:
+        logger.debug("Guest login attempt")
+        service = UserService(db)
+        guest_user, password = service.authenticate_guest()
+        
+        # Create access token
+        token = create_access_token(data={"sub": guest_user.email})
+        logger.info(f"Successful guest login: {guest_user.email}")
+        
+        # Convert user data to dictionary and ensure all required fields are present
+        user_dict = guest_user.to_dict()
+        logger.debug(f"Guest user data before response: {user_dict}")  
+        
+        # Ensure required fields are present
+        required_fields = ["id", "username", "email", "first_name", "last_name", "role", 
+                         "is_active", "is_guest", "is_admin"]
+        missing_fields = [field for field in required_fields if field not in user_dict]
+        if missing_fields:
+            logger.error(f"Missing required fields in user data: {missing_fields}")
+            raise ValueError(f"User data missing required fields: {missing_fields}")
+        
+        response_data = {
+            "access_token": token,
+            "token_type": "bearer",
+            "user": user_dict
+        }
+        logger.debug(f"Full response data: {response_data}")
+        
+        return response_data
+    except ValueError as e:
+        logger.error(f"Guest login validation error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Guest login error: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred during guest login: {str(e)}"
         )
 
 @user_router.get("/me", response_model=UserResponse)
@@ -174,8 +219,13 @@ logger.debug(f"User router routes: {[route.path for route in user_router.routes]
 
 # Register menu router
 logger.info("Registering menu router...")
-app.include_router(menu_router, prefix="/api")
+app.include_router(menu_router)
 logger.debug(f"Menu router routes: {[route.path for route in menu_router.routes]}")
+
+# Register cart router
+logger.info("Registering cart router...")
+app.include_router(cart_router)
+logger.debug(f"Cart router routes: {[route.path for route in cart_router.routes]}")
 
 @app.get("/test", tags=["test"])
 def test_endpoint():

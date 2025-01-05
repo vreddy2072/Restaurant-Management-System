@@ -17,7 +17,6 @@ def test_register_user(client: TestClient, db_session: Session):
         "role": "customer"
     }
     response = client.post("/api/users/register", json=user_data)
-    print(f"Response content: {response.content}")  # Add this line for debugging
     assert response.status_code == 201
     data = response.json()
     assert data["email"] == user_data["email"]
@@ -59,7 +58,7 @@ def test_login_user(client: TestClient, db_session: Session):
     # Try to login
     response = client.post(
         "/api/users/login",
-        data={
+        json={
             "email": user_data["email"],
             "password": user_data["password"]
         }
@@ -68,6 +67,17 @@ def test_login_user(client: TestClient, db_session: Session):
     data = response.json()
     assert "access_token" in data
     assert data["token_type"] == "bearer"
+
+def test_invalid_login(client: TestClient, db_session: Session):
+    """Test login with invalid credentials"""
+    response = client.post(
+        "/api/users/login",
+        json={
+            "email": "nonexistent@example.com",
+            "password": "wrongpassword"
+        }
+    )
+    assert response.status_code == 401
 
 def test_get_current_user(client: TestClient, db_session: Session):
     """Test getting current user info"""
@@ -84,7 +94,7 @@ def test_get_current_user(client: TestClient, db_session: Session):
 
     login_response = client.post(
         "/api/users/login",
-        data={
+        json={
             "email": user_data["email"],
             "password": user_data["password"]
         }
@@ -99,48 +109,14 @@ def test_get_current_user(client: TestClient, db_session: Session):
     assert data["email"] == user_data["email"]
     assert data["username"] == user_data["username"]
 
-def test_update_user(client: TestClient, db_session: Session):
-    """Test updating user info"""
-    # Create and login user
-    user_data = {
-        "username": "updateuser",
-        "email": "update@example.com",
-        "password": "strongpass123",
-        "first_name": "Update",
-        "last_name": "User",
-        "role": "customer"
-    }
-    client.post("/api/users/register", json=user_data)
-
-    login_response = client.post(
-        "/api/users/login",
-        data={
-            "email": user_data["email"],
-            "password": user_data["password"]
-        }
-    )
-    token = login_response.json()["access_token"]
-
-    # Update user info
-    headers = {"Authorization": f"Bearer {token}"}
-    update_data = {
-        "first_name": "Updated",
-        "last_name": "Name"
-    }
-    response = client.put("/api/users/me", json=update_data, headers=headers)
-    assert response.status_code == 200
-    data = response.json()
-    assert data["first_name"] == update_data["first_name"]
-    assert data["last_name"] == update_data["last_name"]
-
 def test_deactivate_user(client: TestClient, db_session: Session):
     """Test deactivating user account"""
     # Create and login user
     user_data = {
-        "username": "deactiveuser",
-        "email": "deactive@example.com",
+        "username": "deactivateuser",
+        "email": "deactivate@example.com",
         "password": "strongpass123",
-        "first_name": "Deactive",
+        "first_name": "Deactivate",
         "last_name": "User",
         "role": "customer"
     }
@@ -148,24 +124,84 @@ def test_deactivate_user(client: TestClient, db_session: Session):
 
     login_response = client.post(
         "/api/users/login",
-        data={
+        json={
             "email": user_data["email"],
             "password": user_data["password"]
         }
     )
     token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
 
     # Deactivate account
-    headers = {"Authorization": f"Bearer {token}"}
     response = client.delete("/api/users/me", headers=headers)
     assert response.status_code == 204
 
-    # Try to login after deactivation
-    login_response = client.post(
-        "/api/users/login",
-        data={
-            "email": user_data["email"],
-            "password": user_data["password"]
-        }
-    )
-    assert login_response.status_code == 401
+    # Try to access account after deactivation
+    response = client.get("/api/users/me", headers=headers)
+    assert response.status_code == 401
+
+def test_guest_login(client: TestClient, db_session: Session):
+    """Test guest user login functionality"""
+    response = client.post("/api/users/guest-login")
+    assert response.status_code == 200
+    
+    data = response.json()
+    assert "access_token" in data
+    assert "token_type" in data
+    assert "user" in data
+    
+    user = data["user"]
+    assert user["is_guest"] is True
+    assert user["role"] == "customer"
+    assert user["username"].startswith("guest_")
+    assert user["email"].endswith("@guest.local")
+
+def test_guest_user_can_access_protected_routes(client: TestClient, db_session: Session):
+    """Test that guest users can access protected routes"""
+    # First create and login as guest
+    login_response = client.post("/api/users/guest-login")
+    assert login_response.status_code == 200
+    token = login_response.json()["access_token"]
+    
+    # Try to access protected route
+    headers = {"Authorization": f"Bearer {token}"}
+    me_response = client.get("/api/users/me", headers=headers)
+    assert me_response.status_code == 200
+    user_data = me_response.json()
+    assert user_data["is_guest"] is True
+
+def test_guest_user_update(client: TestClient, db_session: Session):
+    """Test that guest users can update their information"""
+    # First create and login as guest
+    login_response = client.post("/api/users/guest-login")
+    assert login_response.status_code == 200
+    token = login_response.json()["access_token"]
+    
+    # Update user info
+    headers = {"Authorization": f"Bearer {token}"}
+    update_data = {
+        "first_name": "Updated",
+        "last_name": "Guest"
+    }
+    update_response = client.put("/api/users/me", headers=headers, json=update_data)
+    assert update_response.status_code == 200
+    updated_user = update_response.json()
+    assert updated_user["first_name"] == "Updated"
+    assert updated_user["last_name"] == "Guest"
+    assert updated_user["is_guest"] is True  # Ensure guest status is maintained
+
+def test_guest_user_deactivation(client: TestClient, db_session: Session):
+    """Test that guest users can deactivate their accounts"""
+    # First create and login as guest
+    login_response = client.post("/api/users/guest-login")
+    assert login_response.status_code == 200
+    token = login_response.json()["access_token"]
+    
+    # Deactivate account
+    headers = {"Authorization": f"Bearer {token}"}
+    deactivate_response = client.delete("/api/users/me", headers=headers)
+    assert deactivate_response.status_code == 204
+    
+    # Try to access protected route with deactivated account
+    me_response = client.get("/api/users/me", headers=headers)
+    assert me_response.status_code == 401  # Should be unauthorized

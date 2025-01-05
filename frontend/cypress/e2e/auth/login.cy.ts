@@ -74,6 +74,21 @@ describe('User Login', () => {
     cy.url().should('include', '/register');
   });
 
+  it('should successfully handle guest login', () => {
+    // Click on the guest login button
+    cy.get('button').contains('Continue as Guest').click();
+
+    // Should be redirected to menu page
+    cy.url().should('include', '/menu');
+
+    // Verify navigation bar shows guest state
+    cy.get('button').contains('Logout').should('exist');
+    cy.get('button').contains('Menu').should('exist');
+
+    // Guest users should not see admin features
+    cy.get('button').contains('Menu Management').should('not.exist');
+  });
+
   it('should maintain login state after page refresh', () => {
     const testUser = {
       email: 'testuser@example.com',

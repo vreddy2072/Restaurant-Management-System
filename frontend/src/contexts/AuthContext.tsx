@@ -9,6 +9,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   register: (data: UserCreate) => Promise<UserResponse>;
   login: (data: UserLogin) => Promise<void>;
+  guestLogin: () => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -72,6 +73,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const guestLogin = async (): Promise<void> => {
+    try {
+      const response = await authService.guestLogin();
+      if (response.user) {
+        setUser(response.user);
+      } else {
+        throw new Error('No user data in response');
+      }
+    } catch (error) {
+      console.error('Guest login error in context:', error);
+      throw error;
+    }
+  };
+
   const logout = () => {
     authService.logout();
     setUser(null);
@@ -83,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: !!user,
     register,
     login,
+    guestLogin,
     logout,
     loading
   };

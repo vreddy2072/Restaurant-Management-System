@@ -15,7 +15,7 @@ from backend.models.schemas.menu import (
 from backend.services.menu import MenuService
 from backend.utils.database import get_db
 
-router = APIRouter(prefix="/menu", tags=["menu"])
+router = APIRouter(prefix="/api/menu", tags=["menu"])
 
 # Create images directory if it doesn't exist
 IMAGES_DIR = Path("static/images")

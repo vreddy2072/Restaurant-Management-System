@@ -70,6 +70,31 @@ async def login_user(email: str = Form(...), password: str = Form(...), db: Sess
             detail="An unexpected error occurred during login"
         )
 
+@router.post("/guest-login", tags=["users"])
+async def guest_login(request: Request, db: Session = Depends(get_db)):
+    """Create and login as a guest user"""
+    try:
+        logger.debug("Guest login attempt")
+        service = UserService(db)
+        guest_user, password = service.authenticate_guest()
+        
+        # Create access token
+        token = create_access_token(data={"sub": guest_user.email})
+        logger.info(f"Successful guest login: {guest_user.email}")
+        
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "user": guest_user,
+            "temp_password": password  # Only for guest users to enable immediate access
+        }
+    except Exception as e:
+        logger.error(f"Guest login error: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred during guest login"
+        )
+
 @router.get("/me", response_model=UserResponse, tags=["users"])
 async def get_current_user_info(current_user: UserResponse = Depends(get_current_user)):
     """Get information about the currently logged-in user"""

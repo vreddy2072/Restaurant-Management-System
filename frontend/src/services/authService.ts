@@ -70,17 +70,12 @@ class AuthService {
     try {
       console.log('Login attempt with:', data);
       
-      // Create form data
-      const formData = new FormData();
-      formData.append('email', data.email);  
-      formData.append('password', data.password);
-      
       const response = await axiosInstance.post<AuthResponse>(
         API_ROUTES.users.login, 
-        formData,
+        data,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'application/json',
           },
         }
       );
@@ -98,6 +93,30 @@ class AuthService {
         throw new Error(error.response.data.detail);
       }
       throw new Error('Login failed: ' + (error.message || 'Unknown error'));
+    }
+  }
+
+  async guestLogin(): Promise<AuthResponse> {
+    try {
+      console.log('Attempting guest login...');
+      
+      const response = await axiosInstance.post<AuthResponse>(
+        API_ROUTES.users.guestLogin
+      );
+      
+      const authData = response.data;
+      if (!authData.access_token) {
+        throw new Error('No access token in response');
+      }
+      
+      this.setAuthToken(authData.access_token);
+      return authData;
+    } catch (error: any) {
+      console.error('Guest login error:', error.response || error);
+      if (error.response?.data?.detail) {
+        throw new Error(error.response.data.detail);
+      }
+      throw new Error('Guest login failed: ' + (error.message || 'Unknown error'));
     }
   }
 
