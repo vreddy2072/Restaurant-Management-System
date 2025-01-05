@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -14,6 +14,13 @@ import CartSummary from './CartSummary';
 
 const Cart: React.FC = () => {
   const { cart, loading, error, clearCart } = useCart();
+
+  const cartTotal = useMemo(() => {
+    if (!cart?.items) return 0;
+    return cart.items.reduce((total, item) => {
+      return total + (item.subtotal || 0);
+    }, 0);
+  }, [cart?.items]);
 
   if (loading) {
     return (
@@ -93,21 +100,22 @@ const Cart: React.FC = () => {
         }}
       >
         <Container maxWidth="lg">
-          <Box sx={{ p: 2 }}>
-            <CartSummary total={cart.total} />
-            <Divider sx={{ my: 2 }} />
+          <Box sx={{ py: 1, px: 2 }}>
+            <CartSummary total={cartTotal} />
+            <Divider sx={{ my: 1 }} />
             <Box 
               sx={{ 
                 display: 'flex', 
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                gap: 2,
+                gap: 1,
               }}
             >
               <Button
                 variant="outlined"
                 color="secondary"
                 onClick={() => clearCart()}
+                size="small"
               >
                 Clear Cart
               </Button>
@@ -115,7 +123,7 @@ const Cart: React.FC = () => {
                 variant="contained"
                 color="primary"
                 disabled={cart.items.length === 0}
-                size="large"
+                size="medium"
               >
                 Proceed to Checkout
               </Button>
