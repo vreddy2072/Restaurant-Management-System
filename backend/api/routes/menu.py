@@ -12,7 +12,7 @@ from backend.models.schemas.menu import (
     MenuResponse, CategoryWithItems, MenuItemFilters,
     RatingCreate
 )
-from backend.services.menu import MenuService
+from backend.services.menu_service import MenuService
 from backend.utils.database import get_db
 
 router = APIRouter(prefix="/api/menu", tags=["menu"])
@@ -202,7 +202,8 @@ def customize_menu_item(
     db.commit()
     db.refresh(item)
     
-    return item
+    # Return the item with the category name as a string
+    return MenuItem.from_orm(item)
 
 @router.get("/full", response_model=List[CategoryWithItems])
 def get_full_menu(
@@ -362,13 +363,31 @@ def update_menu_item(
 
 # Full menu route
 @router.get("/", response_model=MenuResponse)
-def get_full_menu(
+def get_menu(
     active_only: bool = Query(True),
     db: Session = Depends(get_db)
 ):
-    """Get the full menu with all categories and their items"""
-    categories = MenuService.get_full_menu(db, active_only)
-    return MenuResponse(categories=[CategoryWithItems.model_validate(cat) for cat in categories])
+    """Get the complete menu structure"""
+    categories = MenuService.get_categories(db, active_only=active_only)
+    menu_items = MenuService.get_menu_items(db, active_only=active_only)
+    
+    # Group menu items by category
+    categories_with_items = []
+    for category in categories:
+        category_items = [
+            {
+                **item.__dict__,
+                "category": category.name  # Add category name as string
+            }
+            for item in menu_items 
+            if item.category_id == category.id
+        ]
+        categories_with_items.append({
+            **category.__dict__,
+            "menu_items": category_items
+        })
+    
+    return {"categories": categories_with_items}
 
 @router.post("/items/{item_id}/image", response_model=MenuItem)
 async def upload_menu_item_image(

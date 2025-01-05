@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime
-from backend.services.user import UserService
+from backend.services.user_service import UserService
 from backend.models.schemas.user import UserCreate
 
 def test_create_guest_user(db_session):

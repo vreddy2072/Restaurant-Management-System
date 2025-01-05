@@ -369,3 +369,282 @@ def test_upload_menu_item_image_invalid_file(client, sample_menu_item):
     response = client.post(f"/api/menu/items/{sample_menu_item.id}/image", files=files)
     assert response.status_code == 400
     assert "File must be an image" in response.json()["detail"]
+
+def test_rate_menu_item(client, sample_menu_item):
+    """Test rating a menu item"""
+    # Initial rating
+    response = client.post(
+        f"/api/menu/items/{sample_menu_item.id}/rate",
+        json={"rating": 4.5}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["average_rating"] == 4.5
+    assert data["rating_count"] == 1
+
+    # Add another rating
+    response = client.post(
+        f"/api/menu/items/{sample_menu_item.id}/rate",
+        json={"rating": 3.5}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["average_rating"] == 4.0  # (4.5 + 3.5) / 2
+    assert data["rating_count"] == 2
+
+def test_rate_inactive_menu_item(client, sample_menu_item):
+    """Test rating an inactive menu item"""
+    # Delete (deactivate) the menu item
+    client.delete(f"/api/menu/items/{sample_menu_item.id}")
+    
+    # Try to rate it
+    response = client.post(
+        f"/api/menu/items/{sample_menu_item.id}/rate",
+        json={"rating": 4.5}
+    )
+    assert response.status_code == 404
+
+def test_customize_menu_item(client, sample_menu_item):
+    """Test customizing a menu item with valid options"""
+    # First update the menu item to have customization options
+    client.patch(
+        f"/api/menu/items/{sample_menu_item.id}",
+        json={
+            "customization_options": {
+                "size": ["small", "medium", "large"],
+                "spice_level": ["mild", "medium", "hot"]
+            }
+        }
+    )
+    
+    # Test valid customization
+    response = client.post(
+        f"/api/menu/items/{sample_menu_item.id}/customize",
+        json={
+            "size": "medium",
+            "spice_level": "hot"
+        }
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["selected_customization"] == {
+        "size": "medium",
+        "spice_level": "hot"
+    }
+
+def test_customize_menu_item_invalid_options(client, sample_menu_item):
+    """Test customizing a menu item with invalid options"""
+    # First update the menu item to have customization options
+    client.patch(
+        f"/api/menu/items/{sample_menu_item.id}",
+        json={
+            "customization_options": {
+                "size": ["small", "medium", "large"]
+            }
+        }
+    )
+    
+    # Test invalid option
+    response = client.post(
+        f"/api/menu/items/{sample_menu_item.id}/customize",
+        json={
+            "size": "extra-large"  # Invalid size
+        }
+    )
+    assert response.status_code == 400
+    assert "Invalid value" in response.json()["detail"]
+
+def test_customize_menu_item_no_options(client, sample_menu_item):
+    """Test customizing a menu item that doesn't support customization"""
+    response = client.post(
+        f"/api/menu/items/{sample_menu_item.id}/customize",
+        json={
+            "size": "medium"
+        }
+    )
+    assert response.status_code == 400
+    assert "does not support customization" in response.json()["detail"]
+
+def test_filter_menu_items_price_range(client, sample_category):
+    """Test filtering menu items by price range"""
+    # Create menu items with different prices
+    items = [
+        {"name": "Cheap Item", "price": 5.99},
+        {"name": "Medium Item", "price": 15.99},
+        {"name": "Expensive Item", "price": 25.99}
+    ]
+    
+    for item in items:
+        client.post(
+            "/api/menu/items/",
+            json={
+                **item,
+                "category_id": sample_category.id
+            }
+        )
+    
+    # Test price range filter
+    response = client.get("/api/menu/menu-items/filter?min_price=10&max_price=20")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["name"] == "Medium Item"
+
+def test_filter_menu_items_by_rating(client, sample_category):
+    """Test filtering menu items by rating"""
+    # Create a menu item
+    response = client.post(
+        "/api/menu/items/",
+        json={
+            "name": "Rated Item",
+            "price": 9.99,
+            "category_id": sample_category.id
+        }
+    )
+    item_id = response.json()["id"]
+    
+    # Add some ratings
+    client.post(f"/api/menu/items/{item_id}/rate", json={"rating": 4.5})
+    client.post(f"/api/menu/items/{item_id}/rate", json={"rating": 4.7})
+    
+    # Test rating filter
+    response = client.get("/api/menu/menu-items/filter?min_rating=4.0")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["name"] == "Rated Item"
+    assert data[0]["average_rating"] > 4.0
+
+def test_allergen_management(client):
+    """Test CRUD operations for allergens"""
+    # Create allergen
+    create_response = client.post(
+        "/api/menu/allergens/",
+        json={
+            "name": "Test Allergen",
+            "description": "Test Description"
+        }
+    )
+    assert create_response.status_code == 201
+    allergen_id = create_response.json()["id"]
+    
+    # Get allergen
+    get_response = client.get(f"/api/menu/allergens/{allergen_id}")
+    assert get_response.status_code == 200
+    assert get_response.json()["name"] == "Test Allergen"
+    
+    # Update allergen
+    update_response = client.put(
+        f"/api/menu/allergens/{allergen_id}",
+        json={
+            "name": "Updated Allergen",
+            "description": "Updated Description"
+        }
+    )
+    assert update_response.status_code == 200
+    assert update_response.json()["name"] == "Updated Allergen"
+    
+    # Patch allergen
+    patch_response = client.patch(
+        f"/api/menu/allergens/{allergen_id}",
+        json={"description": "Patched Description"}
+    )
+    assert patch_response.status_code == 200
+    assert patch_response.json()["description"] == "Patched Description"
+    
+    # List allergens
+    list_response = client.get("/api/menu/allergens/")
+    assert list_response.status_code == 200
+    assert len(list_response.json()) > 0
+    
+    # Delete allergen
+    delete_response = client.delete(f"/api/menu/allergens/{allergen_id}")
+    assert delete_response.status_code == 200
+    
+    # Verify deletion
+    get_deleted = client.get(f"/api/menu/allergens/{allergen_id}")
+    assert get_deleted.status_code == 404
+
+def test_filter_menu_items_combined_filters(client, sample_category):
+    """Test filtering menu items with multiple criteria"""
+    # Create allergens
+    allergen_response = client.post(
+        "/api/menu/allergens/",
+        json={"name": "Test Allergen", "description": "Test"}
+    )
+    allergen_id = allergen_response.json()["id"]
+    
+    # Create menu items with various properties
+    items = [
+        {
+            "name": "Perfect Match",
+            "price": 15.99,
+            "is_vegetarian": True,
+            "is_gluten_free": True,
+            "allergen_ids": []
+        },
+        {
+            "name": "Almost Match",
+            "price": 15.99,
+            "is_vegetarian": True,
+            "is_gluten_free": False,
+            "allergen_ids": []
+        },
+        {
+            "name": "No Match",
+            "price": 25.99,
+            "is_vegetarian": False,
+            "is_gluten_free": False,
+            "allergen_ids": [allergen_id]
+        }
+    ]
+    
+    for item in items:
+        client.post(
+            "/api/menu/items/",
+            json={
+                **item,
+                "category_id": sample_category.id
+            }
+        )
+    
+    # Test combined filters
+    response = client.get(
+        "/api/menu/menu-items/filter?"
+        "min_price=10&max_price=20"
+        "&is_vegetarian=true"
+        "&is_gluten_free=true"
+        f"&allergen_exclude_ids={allergen_id}"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["name"] == "Perfect Match"
+
+def test_get_menu(client, sample_category, sample_menu_item):
+    """Test getting the complete menu with categories and items"""
+    response = client.get("/api/menu")
+    assert response.status_code == 200
+    data = response.json()
+    
+    # Verify response structure
+    assert "categories" in data
+    assert isinstance(data["categories"], list)
+    assert len(data["categories"]) > 0
+    
+    # Verify category structure
+    category = data["categories"][0]
+    assert "id" in category
+    assert "name" in category
+    assert "menu_items" in category
+    assert isinstance(category["menu_items"], list)
+    
+    # Verify menu item structure
+    if len(category["menu_items"]) > 0:
+        menu_item = category["menu_items"][0]
+        assert "id" in menu_item
+        assert "name" in menu_item
+        assert "price" in menu_item
+        assert "category" in menu_item
+        assert isinstance(menu_item["category"], str)
+        assert menu_item["category"] == sample_category.name

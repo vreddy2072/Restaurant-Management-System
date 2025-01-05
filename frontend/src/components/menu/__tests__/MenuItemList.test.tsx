@@ -35,6 +35,8 @@ describe('MenuItemList', () => {
       customization_options: {},
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      category: "Main Course",
+      is_available: true,
     },
   ];
 
@@ -67,6 +69,8 @@ describe('MenuItemList', () => {
     customization_options: {},
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    category: "Main Course",
+    is_available: true,
   };
 
   beforeEach(() => {
@@ -88,6 +92,8 @@ describe('MenuItemList', () => {
       customization_options: {},
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      category: "Main Course",
+      is_available: true,
     }));
     (menuService.updateMenuItem as jest.Mock).mockImplementation(async (id, data) => ({
       ...mockMenuItems.find(item => item.id === id),
@@ -254,4 +260,4 @@ describe('MenuItemList', () => {
       expect(screen.getByText('Failed to load data. Please try again.')).toBeInTheDocument();
     });
   });
-}); 
+});

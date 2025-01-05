@@ -64,16 +64,54 @@ class MenuItemUpdate(BaseModel):
 class MenuItem(MenuItemBase, TimestampedModel):
     id: int
     is_active: bool
+    category: Optional[str] = None
     average_rating: float = 0.0
     rating_count: int = 0
     allergens: List[Allergen] = []
+    selected_customization: Optional[Dict[str, str]] = None
+
+    class Config:
+        from_attributes = True
+
+    @classmethod
+    def from_orm(cls, obj):
+        # Create a dict with only the fields we want
+        obj_dict = {
+            'id': obj.id,
+            'name': obj.name,
+            'description': obj.description,
+            'price': obj.price,
+            'category_id': obj.category_id,
+            'is_vegetarian': obj.is_vegetarian,
+            'is_vegan': obj.is_vegan,
+            'is_gluten_free': obj.is_gluten_free,
+            'spice_level': obj.spice_level,
+            'preparation_time': obj.preparation_time,
+            'customization_options': obj.customization_options,
+            'image_url': obj.image_url,
+            'is_active': obj.is_active,
+            'created_at': obj.created_at,
+            'updated_at': obj.updated_at,
+            'average_rating': obj.average_rating,
+            'rating_count': obj.rating_count,
+            'allergens': obj.allergens,
+            'category': obj.category.name if obj.category else None,
+            'selected_customization': obj.selected_customization
+        }
+        return cls(**obj_dict)
 
 class Category(CategoryBase, TimestampedModel):
     id: int
     is_active: bool
 
+    class Config:
+        from_attributes = True
+
 class CategoryWithItems(Category):
     menu_items: List[MenuItem] = []
+
+    class Config:
+        from_attributes = True
 
 class MenuResponse(BaseModel):
     categories: List[CategoryWithItems]

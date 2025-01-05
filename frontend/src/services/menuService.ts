@@ -20,7 +20,9 @@ class MenuService {
     if (categoryId) params.append('category_id', categoryId.toString());
     if (activeOnly) params.append('active_only', 'true');
     
+    console.log('Making API call to get menu items with params:', params.toString());
     const response = await api.get(`/api/menu/items/`, { params });
+    console.log('API response for menu items:', response.data);
     return response.data.map(ensureAbsoluteImageUrl);
   }
 

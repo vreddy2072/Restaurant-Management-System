@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime, timedelta
-from backend.services.user import UserService
+from backend.services.user_service import UserService
 from backend.models.schemas.user import UserCreate, UserLogin
 from backend.models.orm.user import User
 from passlib.context import CryptContext
