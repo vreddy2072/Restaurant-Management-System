@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Cart, CartItem, AddToCartRequest, UpdateCartItemRequest } from '../types/cart';
 import { cartService } from '../services/cartService';
+import { menuService } from '../services/menuService';
 import { useSnackbar } from '../contexts/SnackbarContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -32,7 +33,26 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       setLoading(true);
-      const updatedCart = await cartService.getCart();
+      const cartData = await cartService.getCart();
+      
+      // Fetch menu items for each cart item
+      const menuItems = await menuService.getMenuItems();
+      const menuItemsMap = new Map(menuItems.map(item => [item.id, item]));
+      
+      // Merge menu item data into cart items
+      const updatedCart = {
+        ...cartData,
+        items: cartData.items.map(item => ({
+          ...item,
+          menu_item: {
+            name: menuItemsMap.get(item.menu_item_id)?.name || 'Unknown Item',
+            description: menuItemsMap.get(item.menu_item_id)?.description || '',
+            image_url: menuItemsMap.get(item.menu_item_id)?.image_url,
+            customization_options: menuItemsMap.get(item.menu_item_id)?.customization_options,
+          }
+        }))
+      };
+      
       setCart(updatedCart);
       setError(null);
     } catch (err) {
@@ -47,7 +67,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       const updatedCart = await cartService.addItem(data);
-      setCart(updatedCart);
+      await refreshCart(); // Refresh to get complete menu item data
       showSnackbar('Item added to cart', 'success');
     } catch (err) {
       setError('Failed to add item to cart');
@@ -62,7 +82,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       const updatedCart = await cartService.updateItem(itemId, data);
-      setCart(updatedCart);
+      await refreshCart(); // Refresh to get complete menu item data
       showSnackbar('Cart updated', 'success');
     } catch (err) {
       setError('Failed to update cart');
@@ -77,7 +97,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       const updatedCart = await cartService.removeItem(itemId);
-      setCart(updatedCart);
+      await refreshCart(); // Refresh to get complete menu item data
       showSnackbar('Item removed from cart', 'success');
     } catch (err) {
       setError('Failed to remove item from cart');

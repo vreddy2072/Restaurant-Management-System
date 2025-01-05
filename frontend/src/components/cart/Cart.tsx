@@ -6,6 +6,7 @@ import {
   CircularProgress,
   Paper,
   Divider,
+  Container,
 } from '@mui/material';
 import { useCart } from '../../contexts/CartContext';
 import CartItem from './CartItem';
@@ -41,38 +42,86 @@ const Cart: React.FC = () => {
   }
 
   return (
-    <Box p={2}>
-      <Paper elevation={3}>
-        <Box p={3}>
-          <Typography variant="h5" gutterBottom>
-            Your Cart
-          </Typography>
-          <Divider sx={{ my: 2 }} />
-          
-          {cart.items.map((item) => (
-            <CartItem key={item.id} item={item} />
-          ))}
-          
-          <Divider sx={{ my: 2 }} />
-          <CartSummary total={cart.total} />
-          
-          <Box mt={3} display="flex" justifyContent="space-between">
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={() => clearCart()}
-            >
-              Clear Cart
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              disabled={cart.items.length === 0}
-            >
-              Proceed to Checkout
-            </Button>
-          </Box>
+    <Box sx={{ pb: { xs: 32, sm: 28 } }}>
+      <Container maxWidth="lg">
+        <Box sx={{ position: 'relative' }}>
+          <Paper elevation={3}>
+            <Box p={3}>
+              <Typography variant="h5" gutterBottom>
+                Your Cart
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              
+              <Box sx={{ 
+                maxHeight: 'calc(100vh - 450px)',
+                overflowY: 'auto',
+                '&::-webkit-scrollbar': {
+                  width: '8px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  backgroundColor: 'rgba(0,0,0,0.1)',
+                  borderRadius: '4px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  backgroundColor: 'rgba(0,0,0,0.2)',
+                  borderRadius: '4px',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0,0,0,0.3)',
+                  },
+                },
+              }}>
+                {cart.items.map((item) => (
+                  <CartItem key={item.id} item={item} />
+                ))}
+              </Box>
+            </Box>
+          </Paper>
         </Box>
+      </Container>
+
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          position: 'fixed', 
+          bottom: 0, 
+          left: 0, 
+          right: 0, 
+          zIndex: 1000,
+          backgroundColor: 'background.paper',
+          borderTop: 1,
+          borderColor: 'divider',
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ p: 2 }}>
+            <CartSummary total={cart.total} />
+            <Divider sx={{ my: 2 }} />
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 2,
+              }}
+            >
+              <Button
+                variant="outlined"
+                color="secondary"
+                onClick={() => clearCart()}
+              >
+                Clear Cart
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                disabled={cart.items.length === 0}
+                size="large"
+              >
+                Proceed to Checkout
+              </Button>
+            </Box>
+          </Box>
+        </Container>
       </Paper>
     </Box>
   );

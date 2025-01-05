@@ -43,6 +43,28 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
     }
   };
 
+  // If menu_item is missing, show a fallback UI
+  if (!item.menu_item) {
+    return (
+      <Card sx={{ mb: 2, position: 'relative' }}>
+        <CardContent>
+          <Typography color="error">
+            Item data unavailable
+          </Typography>
+          <Box display="flex" justifyContent="flex-end">
+            <IconButton
+              color="error"
+              onClick={handleRemove}
+              disabled={loading}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Box>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card sx={{ mb: 2, position: 'relative' }}>
       <Box display="flex">
@@ -60,7 +82,7 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
               {item.menu_item.name}
             </Typography>
             <Typography variant="subtitle1" color="primary">
-              ${item.unit_price.toFixed(2)}
+              ${(item.unit_price || 0).toFixed(2)}
             </Typography>
           </Box>
 
@@ -106,7 +128,7 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
             <Box flex={1} />
 
             <Typography variant="subtitle1" sx={{ mx: 2 }}>
-              ${item.subtotal.toFixed(2)}
+              ${(item.subtotal || 0).toFixed(2)}
             </Typography>
 
             <IconButton
