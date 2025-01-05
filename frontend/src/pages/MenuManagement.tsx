@@ -30,15 +30,8 @@ export const MenuManagement: React.FC = () => {
   }
 
   return (
-    <Box 
-      sx={{ 
-        height: 'calc(100vh - 64px)', // Account for AppBar height
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden'
-      }}
-    >
-      <Container maxWidth="lg" sx={{ py: 2, flex: 'none' }}>
+    <Box>
+      <Container maxWidth="lg">
         <Paper sx={{ p: 3 }}>
           <Typography variant="h4" component="h1" gutterBottom>
             Menu Management
@@ -56,31 +49,7 @@ export const MenuManagement: React.FC = () => {
               <Tab label="Menu Items" />
             </Tabs>
           </Box>
-        </Paper>
-      </Container>
 
-      <Box 
-        sx={{ 
-          flex: 1,
-          overflowY: 'auto',
-          px: 2,
-          '&::-webkit-scrollbar': {
-            width: '8px',
-          },
-          '&::-webkit-scrollbar-track': {
-            backgroundColor: 'rgba(0,0,0,0.1)',
-            borderRadius: '4px',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: 'rgba(0,0,0,0.2)',
-            borderRadius: '4px',
-            '&:hover': {
-              backgroundColor: 'rgba(0,0,0,0.3)',
-            },
-          },
-        }}
-      >
-        <Container maxWidth="lg">
           {activeTab === 0 && (
             <CategoryList />
           )}
@@ -88,8 +57,8 @@ export const MenuManagement: React.FC = () => {
           {activeTab === 1 && (
             <MenuItemList />
           )}
-        </Container>
-      </Box>
+        </Paper>
+      </Container>
     </Box>
   );
 }; 

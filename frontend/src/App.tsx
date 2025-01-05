@@ -28,16 +28,14 @@ function NavBar() {
     <AppBar position="static" sx={{ minHeight: 56 }}>
       <Toolbar variant="dense" sx={{ minHeight: 56 }}>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          Restaurant Management
+          Flavor Fusion Restaurant
         </Typography>
         {isAuthenticated ? (
           <>
             <Button color="inherit" component={Link} to="/" size="small">
               Menu
             </Button>
-            <Button color="inherit" component={Link} to="/admin/menu" size="small">
-              Manage Menu
-            </Button>
+
             <Button 
               color="inherit" 
               component={Link} 
@@ -52,6 +50,9 @@ function NavBar() {
             >
               Cart
             </Button>
+            <Button color="inherit" component={Link} to="/admin/menu" size="small">
+              Manage Menu
+            </Button>            
             <Button color="inherit" onClick={handleLogout} size="small">
               Logout
             </Button>
@@ -79,39 +80,51 @@ function App() {
           <CartProvider>
             <Box sx={{ 
               minHeight: '100vh',
-              bgcolor: 'background.default'
+              bgcolor: 'background.default',
+              display: 'flex',
+              flexDirection: 'column'
             }}>
               <NavBar />
-              <Container component="main" sx={{ mt: 4, mb: 4 }}>
-                <Routes>
-                  <Route path="/register" element={<RegisterForm />} />
-                  <Route path="/login" element={<LoginForm />} />
-                  <Route
-                    path="/admin/menu"
-                    element={
-                      <ProtectedRoute>
-                        <MenuManagement />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/cart"
-                    element={
-                      <ProtectedRoute>
-                        <Cart />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/"
-                    element={
-                      <ProtectedRoute>
-                        <Menu />
-                      </ProtectedRoute>
-                    }
-                  />
-                </Routes>
-              </Container>
+              <Box 
+                component="main" 
+                sx={{ 
+                  flex: 1,
+                  overflowY: 'auto',
+                  pt: 4,
+                  pb: 4
+                }}
+              >
+                <Container>
+                  <Routes>
+                    <Route path="/register" element={<RegisterForm />} />
+                    <Route path="/login" element={<LoginForm />} />
+                    <Route
+                      path="/cart"
+                      element={
+                        <ProtectedRoute>
+                          <Cart />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/menu"
+                      element={
+                        <ProtectedRoute>
+                          <MenuManagement />
+                        </ProtectedRoute>
+                      }
+                    />                  
+                    <Route
+                      path="/"
+                      element={
+                        <ProtectedRoute>
+                          <Menu />
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Routes>
+                </Container>
+              </Box>
             </Box>
           </CartProvider>
         </AuthProvider>

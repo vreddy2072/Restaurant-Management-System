@@ -276,15 +276,8 @@ const Menu: React.FC = () => {
   }
 
   return (
-    <Box 
-      sx={{ 
-        height: 'calc(100vh - 64px)', // Account for AppBar height
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden'
-      }}
-    >
-      <Container maxWidth="lg" sx={{ py: 2 }}>
+    <Box>
+      <Container maxWidth="lg">
         <Box sx={{ mb: 2 }}>
           <Typography variant="h4" component="h1">
             Our Menu
@@ -337,41 +330,17 @@ const Menu: React.FC = () => {
             </Grid>
           </Grid>
         </Paper>
-      </Container>
 
-      <Box 
-        sx={{ 
-          flex: 1,
-          overflowY: 'auto',
-          px: 2,
-          '&::-webkit-scrollbar': {
-            width: '8px',
-          },
-          '&::-webkit-scrollbar-track': {
-            backgroundColor: 'rgba(0,0,0,0.1)',
-            borderRadius: '4px',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: 'rgba(0,0,0,0.2)',
-            borderRadius: '4px',
-            '&:hover': {
-              backgroundColor: 'rgba(0,0,0,0.3)',
-            },
-          },
-        }}
-      >
-        <Container maxWidth="lg">
-          {Object.keys(groupedMenuItems).length === 0 ? (
-            <Typography variant="h6" align="center" color="text.secondary">
-              No menu items found
-            </Typography>
-          ) : (
-            Object.entries(groupedMenuItems).map(([category, items]) =>
-              renderCategorySection(category, items)
-            )
-          )}
-        </Container>
-      </Box>
+        {Object.keys(groupedMenuItems).length === 0 ? (
+          <Typography variant="h6" align="center" color="text.secondary">
+            No menu items found
+          </Typography>
+        ) : (
+          Object.entries(groupedMenuItems).map(([category, items]) =>
+            renderCategorySection(category, items)
+          )
+        )}
+      </Container>
 
       <Drawer
         anchor="right"
