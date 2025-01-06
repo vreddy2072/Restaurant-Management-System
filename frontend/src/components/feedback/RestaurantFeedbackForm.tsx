@@ -66,32 +66,32 @@ const RestaurantFeedbackForm: React.FC<Props> = ({ onSubmit }) => {
           {error && <Alert severity="error">{error}</Alert>}
           {success && <Alert severity="success">{success}</Alert>}
 
-          <Box>
-            <Typography component="legend">Service Rating</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography component="legend" sx={{ minWidth: 140 }}>Service Rating</Typography>
             <Rating
               value={feedback.service_rating}
               onChange={(_, value) => setFeedback(prev => ({ ...prev, service_rating: value || 0 }))}
             />
           </Box>
 
-          <Box>
-            <Typography component="legend">Ambiance Rating</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography component="legend" sx={{ minWidth: 140 }}>Ambiance Rating</Typography>
             <Rating
               value={feedback.ambiance_rating}
               onChange={(_, value) => setFeedback(prev => ({ ...prev, ambiance_rating: value || 0 }))}
             />
           </Box>
 
-          <Box>
-            <Typography component="legend">Cleanliness Rating</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography component="legend" sx={{ minWidth: 140 }}>Cleanliness Rating</Typography>
             <Rating
               value={feedback.cleanliness_rating}
               onChange={(_, value) => setFeedback(prev => ({ ...prev, cleanliness_rating: value || 0 }))}
             />
           </Box>
 
-          <Box>
-            <Typography component="legend">Value for Money Rating</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography component="legend" sx={{ minWidth: 140 }}>Value for Money Rating</Typography>
             <Rating
               value={feedback.value_rating}
               onChange={(_, value) => setFeedback(prev => ({ ...prev, value_rating: value || 0 }))}
@@ -100,15 +100,23 @@ const RestaurantFeedbackForm: React.FC<Props> = ({ onSubmit }) => {
 
           <TextField
             label="Your Feedback"
+            required
             multiline
             rows={4}
             value={feedback.feedback_text}
             onChange={(e) => setFeedback(prev => ({ ...prev, feedback_text: e.target.value }))}
-            fullWidth
-            required
+            error={feedback.feedback_text.trim() === ''}
+            helperText={feedback.feedback_text.trim() === '' ? 'Feedback is required' : ''}
           />
 
-          <Button type="submit" variant="contained" color="primary">
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            fullWidth
+            size="large"
+            sx={{ mt: 2 }}
+          >
             Submit Feedback
           </Button>
         </Stack>

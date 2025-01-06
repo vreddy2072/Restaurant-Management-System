@@ -57,9 +57,6 @@ const FeedbackPage: React.FC = () => {
           )}
         </Grid>
         <Grid item xs={12} md={6}>
-          <Box mb={4}>
-            <RecentFeedback feedbackList={recentFeedback} />
-          </Box>
           <FeedbackStats stats={stats} />
         </Grid>
       </Grid>

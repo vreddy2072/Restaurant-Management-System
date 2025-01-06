@@ -163,6 +163,7 @@ export const MenuItemListView: React.FC<MenuItemListViewProps> = ({
               <RatingComponent
                 menuItemId={item.id}
                 initialRating={item.average_rating}
+                initialRatingCount={item.rating_count}
                 readOnly
               />
             </Box>
