@@ -8,7 +8,6 @@ import {
   Chip,
   Box,
   Skeleton,
-  Rating,
   Tooltip,
   Stack,
   Switch,
@@ -26,6 +25,7 @@ import {
 import type { MenuItem } from '../../types/menu';
 import { styled } from '@mui/material/styles';
 import AddToCartButton from '../cart/AddToCartButton';
+import RatingComponent from './RatingComponent';
 
 interface MenuItemCardProps {
   item: MenuItem;
@@ -183,10 +183,11 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
           {item.description}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <Rating value={item.average_rating} precision={0.5} readOnly size="small" />
-          <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-            ({item.rating_count})
-          </Typography>
+          <RatingComponent
+            menuItemId={item.id}
+            initialRating={item.average_rating}
+            readOnly={showAdminControls}
+          />
         </Box>
         <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 1 }}>
           {item.allergens.map((allergen) => (
