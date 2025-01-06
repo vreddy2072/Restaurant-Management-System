@@ -234,6 +234,22 @@ def test_cart_item(db_session, test_cart, test_menu_item):
     return cart_item
 
 @pytest.fixture
-def test_user_token(test_user):
+def test_user_token(db_session):
     """Create a JWT token for the test user"""
-    return create_access_token(data={"sub": test_user.email})
+    from backend.services.user_service import UserService
+    from backend.models.schemas.user import UserCreate
+    
+    # Create a test user with proper password hashing
+    user_service = UserService(db_session)
+    user_data = UserCreate(
+        username="testuser",
+        email="test@example.com",
+        password="testpass123",
+        first_name="Test",
+        last_name="User",
+        role="customer"
+    )
+    user = user_service.create_user(user_data)
+    
+    # Create and return the token
+    return create_access_token(data={"sub": user.email})

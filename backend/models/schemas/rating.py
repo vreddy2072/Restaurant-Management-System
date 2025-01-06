@@ -30,14 +30,10 @@ class MenuItemRatingResponse(MenuItemRating):
 
 class RestaurantFeedbackBase(BaseModel):
     feedback_text: str = Field(..., min_length=1, max_length=1000)
-    category: str
-
-    @validator('category')
-    def validate_category(cls, v):
-        valid_categories = ["service", "food", "ambiance", "cleanliness", "other"]
-        if v not in valid_categories:
-            raise ValueError(f"Category must be one of: {', '.join(valid_categories)}")
-        return v
+    service_rating: int = Field(..., ge=1, le=5)
+    ambiance_rating: int = Field(..., ge=1, le=5)
+    cleanliness_rating: int = Field(..., ge=1, le=5)
+    value_rating: int = Field(..., ge=1, le=5)
 
     @validator('feedback_text')
     def feedback_not_empty(cls, v):
@@ -56,3 +52,14 @@ class RestaurantFeedback(RestaurantFeedbackBase):
 
     class Config:
         from_attributes = True
+
+class RestaurantFeedbackResponse(RestaurantFeedback):
+    pass
+
+class RestaurantFeedbackStats(BaseModel):
+    """Statistics for restaurant feedback"""
+    average_service_rating: float = Field(..., ge=0, le=5)
+    average_ambiance_rating: float = Field(..., ge=0, le=5)
+    average_cleanliness_rating: float = Field(..., ge=0, le=5)
+    average_value_rating: float = Field(..., ge=0, le=5)
+    total_reviews: int = Field(..., ge=0)

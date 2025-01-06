@@ -35,18 +35,41 @@ class RestaurantFeedback(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     feedback_text = Column(String(1000), nullable=False)
-    category = Column(String(50), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    service_rating = Column(Integer, nullable=False)
+    ambiance_rating = Column(Integer, nullable=False)
+    cleanliness_rating = Column(Integer, nullable=False)
+    value_rating = Column(Integer, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
-    VALID_CATEGORIES = ["service", "food", "ambiance", "cleanliness", "other"]
+    __table_args__ = (
+        CheckConstraint('service_rating >= 1 AND service_rating <= 5', name='check_service_rating_range'),
+        CheckConstraint('ambiance_rating >= 1 AND ambiance_rating <= 5', name='check_ambiance_rating_range'),
+        CheckConstraint('cleanliness_rating >= 1 AND cleanliness_rating <= 5', name='check_cleanliness_rating_range'),
+        CheckConstraint('value_rating >= 1 AND value_rating <= 5', name='check_value_rating_range'),
+    )
 
     # Use string references to avoid circular imports
     user = relationship("User", back_populates="restaurant_feedback")
 
     def __init__(self, **kwargs):
-        if 'category' in kwargs and kwargs['category'] not in self.VALID_CATEGORIES:
-            raise ValueError(f"Invalid category. Must be one of: {', '.join(self.VALID_CATEGORIES)}")
+        for rating_field in ['service_rating', 'ambiance_rating', 'cleanliness_rating', 'value_rating']:
+            if rating_field in kwargs and (kwargs[rating_field] < 1 or kwargs[rating_field] > 5):
+                raise ValueError(f"{rating_field.replace('_', ' ').title()} must be between 1 and 5")
         if 'feedback_text' in kwargs and len(kwargs['feedback_text'].strip()) == 0:
             raise ValueError("Feedback text cannot be empty")
         super().__init__(**kwargs)
+
+    def to_dict(self):
+        """Convert feedback to dictionary"""
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "feedback_text": self.feedback_text,
+            "service_rating": self.service_rating,
+            "ambiance_rating": self.ambiance_rating,
+            "cleanliness_rating": self.cleanliness_rating,
+            "value_rating": self.value_rating,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
