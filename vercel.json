@@ -16,7 +16,7 @@
       "src": "frontend/package.json",
       "use": "@vercel/node",
       "config": {
-        "nodeVersion": "18.x"
+        "nodeVersion": "20.x"
       }
     }
   ],
@@ -32,7 +32,7 @@
   ],
   "env": {
     "PYTHON_VERSION": "3.11",
-    "NODE_VERSION": "18.x",
+    "NODE_VERSION": "20.x",
     "DATABASE_URL": "sqlite:///backend/database/restaurant.db",
     "ALLOWED_ORIGINS": "https://*.vercel.app,http://localhost:5173,http://localhost:3000"
   },
