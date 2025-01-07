@@ -38,12 +38,6 @@
       "dest": "frontend/dist/$1"
     }
   ],
-  "functions": {
-    "backend/api/vercel_handler.py": {
-      "memory": 128,
-      "maxDuration": 10
-    }
-  },
   "env": {
     "PYTHON_VERSION": "3.11",
     "NODE_VERSION": "20.x",
