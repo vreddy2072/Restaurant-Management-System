@@ -75,6 +75,11 @@ const UserDialog: React.FC<UserDialogProps> = ({
     });
   };
 
+  const handleRoleChange = (event: SelectChangeEvent<string>) => {
+    const role = event.target.value as UserRole;
+    setFormData(prev => ({ ...prev, role }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const userData = { ...formData };
@@ -131,7 +136,7 @@ const UserDialog: React.FC<UserDialogProps> = ({
               <InputLabel>Role</InputLabel>
               <Select
                 value={formData.role}
-                onChange={handleChange('role')}
+                onChange={handleRoleChange}
                 label="Role"
               >
                 <MenuItem value="admin">Admin</MenuItem>

@@ -14,10 +14,10 @@
     },
     {
       "src": "frontend/package.json",
-      "use": "@vercel/node",
+      "use": "@vercel/static-build",
       "config": {
-        "nodeVersion": "20.x",
-        "buildCommand": "cd frontend && npm install --legacy-peer-deps && npm run build"
+        "distDir": "dist",
+        "buildCommand": "npm install --legacy-peer-deps && npm run build"
       }
     }
   ],
@@ -27,8 +27,11 @@
       "dest": "backend/api/app.py"
     },
     {
+      "handle": "filesystem"
+    },
+    {
       "src": "/(.*)",
-      "dest": "frontend/$1"
+      "dest": "/frontend/dist/$1"
     }
   ],
   "env": {
