@@ -13,7 +13,7 @@ services:
       - key: DATABASE_URL
         value: sqlite:///backend/database/restaurant.db
       - key: ALLOWED_ORIGINS
-        value: "https://restaurant-management-system-*-vinesh-vonterus-projects.vercel.app"
+        value: "https://restaurant-management-system-*-vinesh-vonterus-projects.vercel.app,https://restaurant-management-system-*.vercel.app"
       - key: JWT_SECRET_KEY
         value: "TRYXQMbll9xoTZohCfcf2UGuF62cr5xVTN+ADmb8SXY="
     healthCheckPath: /test
