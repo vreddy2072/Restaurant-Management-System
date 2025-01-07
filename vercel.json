@@ -17,19 +17,19 @@
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist",
-        "buildCommand": "npm install --legacy-peer-deps && npm run build"
+        "distDir": "frontend/dist",
+        "buildCommand": "cd frontend && npm install --legacy-peer-deps && npm run build"
       }
     }
   ],
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "backend/api/app.py"
+      "destination": "/backend/api/app.py"
     },
     {
       "source": "/(.*)",
-      "destination": "/frontend/dist/$1"
+      "destination": "/frontend/dist/index.html"
     }
   ],
   "headers": [
