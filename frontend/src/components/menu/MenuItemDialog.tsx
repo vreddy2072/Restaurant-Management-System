@@ -173,47 +173,37 @@ export const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    try {
-      const menuItemData: MenuItemCreate = {
-        name: formData.name,
-        description: formData.description,
-        price: formData.price,
-        category_id: formData.category_id,
-        is_vegetarian: formData.is_vegetarian,
-        is_vegan: formData.is_vegan,
-        is_gluten_free: formData.is_gluten_free,
-        spice_level: formData.spice_level,
-        preparation_time: formData.preparation_time,
-        allergen_info: formData.allergens,
-        nutritional_info: {},
-        image_url: formData.image_url,
-        is_available: true
-      };
-      if (!validateForm()) return;
+    if (!validateForm()) return;
 
+    try {
       setLoading(true);
       
-      // Log initial form data
-      console.log('Form data before submission:', formData);
-      console.log('Allergens in form data:', formData.allergens);
+      const menuItemData: MenuItemCreate = {
+        name: formData.name || '',
+        description: formData.description || '',
+        price: Number(formData.price) || 0,
+        category_id: Number(formData.category_id) || 0,
+        is_vegetarian: Boolean(formData.is_vegetarian),
+        is_vegan: Boolean(formData.is_vegan),
+        is_gluten_free: Boolean(formData.is_gluten_free),
+        spice_level: Number(formData.spice_level) || 0,
+        preparation_time: Number(formData.preparation_time) || 0,
+        allergen_info: formData.allergens || [],
+        nutritional_info: {},
+        image_url: formData.image_url || '',
+        is_available: true
+      };
       
       let savedItem;
       if (item) {
-        console.log('Updating item with ID:', item.id);
         savedItem = await menuService.updateMenuItem(item.id, menuItemData);
       } else {
-        console.log('Creating new item');
         savedItem = await menuService.createMenuItem(menuItemData);
       }
-      
-      // Log the response
-      console.log('API Response:', savedItem);
-      console.log('Allergens in response:', savedItem?.allergens);
       
       if (imageFile && savedItem?.id) {
         try {
           const updatedItem = await menuService.uploadImage(savedItem.id, imageFile);
-          console.log('Image uploaded successfully:', updatedItem);
           savedItem = updatedItem;
         } catch (error) {
           console.error('Failed to upload image:', error);
@@ -225,20 +215,10 @@ export const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
       if (savedItem) {
         await onSave(savedItem);
         onClose();
-      } else {
-        throw new Error('Failed to save menu item: No response from server');
       }
     } catch (error: any) {
       console.error('Failed to save menu item:', error);
-      let errorMessage = 'Failed to save menu item. Please try again.';
-      if (error.response?.data?.detail) {
-        errorMessage = typeof error.response.data.detail === 'string' 
-          ? error.response.data.detail 
-          : 'Validation error occurred. Please check your input.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      setError(errorMessage);
+      setError(error.message || 'Failed to save menu item');
     } finally {
       setLoading(false);
     }
