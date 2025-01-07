@@ -1,6 +1,7 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 
 from backend.models.orm.rating import MenuItemRating, RestaurantFeedback
 from backend.models.schemas.rating import MenuItemRatingCreate, RestaurantFeedbackCreate
@@ -83,3 +84,37 @@ class RatingService:
     def get_user_feedback(self, user_id: int) -> List[RestaurantFeedback]:
         """Get all feedback from a specific user."""
         return self.db.query(RestaurantFeedback).filter(RestaurantFeedback.user_id == user_id).all()
+
+    def get_menu_item_average_rating(self, menu_item_id: int) -> Dict[str, any]:
+        """Get the average rating and total number of ratings for a menu item."""
+        result = self.db.query(
+            func.avg(MenuItemRating.rating).label('average'),
+            func.count(MenuItemRating.id).label('total')
+        ).filter(
+            MenuItemRating.menu_item_id == menu_item_id
+        ).first()
+        
+        return {
+            'average_rating': round(float(result.average), 1) if result.average else 0.0,
+            'total_ratings': result.total
+        }
+
+    def get_menu_items_average_ratings(self, menu_item_ids: List[int]) -> Dict[int, Dict[str, any]]:
+        """Get average ratings for multiple menu items at once."""
+        results = self.db.query(
+            MenuItemRating.menu_item_id,
+            func.avg(MenuItemRating.rating).label('average'),
+            func.count(MenuItemRating.id).label('total')
+        ).filter(
+            MenuItemRating.menu_item_id.in_(menu_item_ids)
+        ).group_by(
+            MenuItemRating.menu_item_id
+        ).all()
+        
+        return {
+            r.menu_item_id: {
+                'average_rating': round(float(r.average), 1),
+                'total_ratings': r.total
+            }
+            for r in results
+        }

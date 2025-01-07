@@ -7,16 +7,30 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
+  withCredentials: false
 });
+
+// Add request interceptor to handle auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // Handle 401 Unauthorized
     if (error.response?.status === 401) {
-      // Handle token refresh or logout
+      // Clear token on auth error
+      localStorage.removeItem('token');
     }
     return Promise.reject(error);
   }
