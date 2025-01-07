@@ -17,4 +17,5 @@ services:
       - key: JWT_SECRET_KEY
         value: "TRYXQMbll9xoTZohCfcf2UGuF62cr5xVTN+ADmb8SXY="
     healthCheckPath: /test
+    healthCheckInterval: 60s
     autoDeploy: true 
