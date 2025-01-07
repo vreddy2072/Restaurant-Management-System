@@ -3,45 +3,28 @@
   "builds": [
     {
       "src": "backend/api/app.py",
-      "use": "@vercel/python",
-      "config": {
-        "runtime": "python3.11",
-        "maxLambdaSize": "15mb",
-        "includeFiles": [
-          "backend/database/**"
-        ],
-        "installCommand": "pip install -r backend/requirements.txt"
-      }
+      "use": "@vercel/python"
     },
     {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist",
         "buildCommand": "cd frontend && npm install --legacy-peer-deps && npm run build",
         "outputDirectory": "frontend/dist"
       }
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/backend/api/app.py"
+      "src": "/api/(.*)",
+      "dest": "backend/api/app.py"
     },
     {
-      "source": "/(.*)",
-      "destination": "/frontend/dist/index.html"
-    }
-  ],
-  "headers": [
+      "handle": "filesystem"
+    },
     {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Credentials", "value": "true" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
-        { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization" }
-      ]
+      "src": "/(.*)",
+      "dest": "frontend/dist/index.html"
     }
   ],
   "env": {
