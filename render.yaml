@@ -16,5 +16,5 @@ services:
         value: "https://restaurant-management-system-*-vinesh-vonterus-projects.vercel.app"
       - key: JWT_SECRET_KEY
         value: "TRYXQMbll9xoTZohCfcf2UGuF62cr5xVTN+ADmb8SXY="
-    healthCheckPath: /api/test
+    healthCheckPath: /test
     autoDeploy: true 
