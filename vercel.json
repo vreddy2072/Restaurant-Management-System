@@ -2,15 +2,6 @@
   "version": 2,
   "builds": [
     {
-      "src": "backend/api/vercel_handler.py",
-      "use": "@vercel/python",
-      "config": {
-        "runtime": "python3.11",
-        "installCommand": "pip install --no-cache-dir fastapi uvicorn",
-        "handler": "vercel_handler.handler"
-      }
-    },
-    {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
@@ -21,26 +12,14 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "backend/api/vercel_handler.py",
-      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      "headers": {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
-        "Access-Control-Allow-Headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization"
-      }
-    },
-    {
       "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "frontend/dist/$1"
+      "dest": "/frontend/dist/index.html"
     }
   ],
   "env": {
-    "PYTHON_VERSION": "3.11",
-    "NODE_VERSION": "20.x",
-    "ALLOWED_ORIGINS": "https://*.vercel.app,http://localhost:5173,http://localhost:3000"
+    "NODE_VERSION": "20.x"
   }
 }
