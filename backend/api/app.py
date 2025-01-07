@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 from backend.utils.database import init_db, get_db
 from backend.models.schemas.user import UserCreate, UserUpdate, UserResponse, UserLogin
-from backend.services.user import UserService
+from backend.services.user_service import UserService
 from backend.utils.auth import create_access_token, get_current_user
 from backend.api.routes.menu import router as menu_router
 from backend.api.routes.cart import router as cart_router
@@ -41,10 +41,10 @@ logger.debug(f"Configured CORS origins: {origins}")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"] if os.getenv("ENVIRONMENT") == "development" else origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With", "Access-Control-Allow-Origin"],
+    allow_methods=["*"],
+    allow_headers=["*"],
     expose_headers=["*"],
     max_age=3600,
 )

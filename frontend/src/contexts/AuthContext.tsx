@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import authService from '../services/authService';
 import { UserResponse, UserCreate, UserLogin, AuthResponse } from '../types/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: UserResponse | null;
@@ -27,6 +28,8 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -73,17 +76,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const guestLogin = async (): Promise<void> => {
+  const guestLogin = async () => {
     try {
+      setLoading(true);
       const response = await authService.guestLogin();
-      if (response.user) {
+      if (response?.access_token) {
         setUser(response.user);
-      } else {
-        throw new Error('No user data in response');
+        authService.setAuthToken(response.access_token);
+        navigate('/');
       }
     } catch (error) {
-      console.error('Guest login error in context:', error);
-      throw error;
+      console.error('Guest login error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to login');
+    } finally {
+      setLoading(false);
     }
   };
 

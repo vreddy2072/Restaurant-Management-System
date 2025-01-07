@@ -17,7 +17,10 @@ const mockMenuItem: MenuItem = {
   average_rating: 4.5,
   rating_count: 10,
   is_active: true,
-  allergens: ["gluten", "dairy"],
+  allergens: [
+    { id: 1, name: "gluten" },
+    { id: 2, name: "dairy" }
+  ],
   customization_options: {
     "Size": ["Small", "Medium", "Large"],
     "Crust": ["Thin", "Regular", "Thick"]

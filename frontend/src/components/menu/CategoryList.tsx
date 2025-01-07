@@ -121,6 +121,8 @@ export const CategoryList: React.FC = () => {
     try {
       setError(null);
       await menuService.updateCategory(category.id, {
+        name: category.name,
+        description: category.description || null,
         is_active: !category.is_active,
       });
       loadCategories();

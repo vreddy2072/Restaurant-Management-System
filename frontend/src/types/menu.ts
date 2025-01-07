@@ -4,7 +4,9 @@ export interface MenuItem {
   description: string;
   price: number;
   category_id: number;
+  category: string;
   is_active: boolean;
+  is_available: boolean;
   is_vegetarian: boolean;
   is_vegan: boolean;
   is_gluten_free: boolean;
@@ -30,13 +32,13 @@ export interface Category {
   updated_at: string;
 }
 
-export interface CategoryCreate extends Omit<Category, 'id' | 'created_at' | 'updated_at'> {
+export interface CategoryCreate {
   name: string;
   description: string | null;
   is_active: boolean;
 }
 
-export interface CategoryUpdate extends Partial<CategoryCreate> {
+export interface CategoryUpdate extends CategoryCreate {
   id?: never;
 }
 
@@ -46,7 +48,7 @@ export interface Allergen {
   description?: string;
 }
 
-export interface MenuItemCreate extends Omit<MenuItem, 'id' | 'created_at' | 'updated_at' | 'allergens'> {
+export interface MenuItemCreate extends Omit<MenuItem, 'id' | 'created_at' | 'updated_at' | 'category' | 'average_rating' | 'rating_count'> {
   category_id: number;
   allergen_ids: number[];
 }

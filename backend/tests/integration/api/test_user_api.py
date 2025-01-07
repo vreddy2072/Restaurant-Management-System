@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from backend.api.app import app
 from backend.models.schemas.user import UserCreate, UserUpdate
-from backend.services.user import UserService
+from backend.services.user_service import UserService
 
 def test_register_user(client: TestClient, db_session: Session):
     """Test user registration endpoint"""
@@ -139,6 +139,7 @@ def test_deactivate_user(client: TestClient, db_session: Session):
     # Try to access account after deactivation
     response = client.get("/api/users/me", headers=headers)
     assert response.status_code == 401
+    assert "Not authenticated or user is deactivated" in response.json()["detail"]
 
 def test_guest_login(client: TestClient, db_session: Session):
     """Test guest user login functionality"""
@@ -196,12 +197,13 @@ def test_guest_user_deactivation(client: TestClient, db_session: Session):
     login_response = client.post("/api/users/guest-login")
     assert login_response.status_code == 200
     token = login_response.json()["access_token"]
-    
+
     # Deactivate account
     headers = {"Authorization": f"Bearer {token}"}
     deactivate_response = client.delete("/api/users/me", headers=headers)
     assert deactivate_response.status_code == 204
-    
+
     # Try to access protected route with deactivated account
     me_response = client.get("/api/users/me", headers=headers)
-    assert me_response.status_code == 401  # Should be unauthorized
+    assert me_response.status_code == 401
+    assert "Not authenticated or user is deactivated" in me_response.json()["detail"]

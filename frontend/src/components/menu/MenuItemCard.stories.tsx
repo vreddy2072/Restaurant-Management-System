@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { MenuItemCard } from './MenuItemCard';
+import MenuItemCard from './MenuItemCard';
 
 const meta: Meta<typeof MenuItemCard> = {
   title: 'Menu/MenuItemCard',
@@ -18,28 +18,30 @@ export const Default: Story = {
   args: {
     item: {
       id: 1,
-      name: 'Classic Burger',
-      description: 'Juicy beef patty with fresh lettuce, tomatoes, and our special sauce',
+      name: 'Margherita Pizza',
+      description: 'Fresh tomatoes, mozzarella, basil',
       price: 12.99,
       category_id: 1,
+      category: 'Pizza',
       is_active: true,
-      is_vegetarian: false,
+      is_available: true,
+      is_vegetarian: true,
       is_vegan: false,
       is_gluten_free: false,
-      spice_level: 2,
+      spice_level: 0,
       preparation_time: 15,
       average_rating: 4.5,
       rating_count: 128,
-      allergens: ['dairy', 'gluten'],
+      allergens: [],
       customization_options: {
-        toppings: ['cheese', 'bacon', 'avocado'],
-        sauces: ['special', 'bbq', 'ranch']
+        'Size': ['Small', 'Medium', 'Large'],
+        'Extra Toppings': ['Mushrooms', 'Olives', 'Extra Cheese']
       },
-      image_url: 'https://example.com/burger.jpg',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-  }
+      image_url: 'https://example.com/pizza.jpg',
+      created_at: '2023-01-01T00:00:00Z',
+      updated_at: '2023-01-01T00:00:00Z'
+    },
+  },
 };
 
 export const Vegetarian: Story = {
@@ -69,4 +71,4 @@ export const WithError: Story = {
     item: Default.args.item,
     error: 'Failed to load image'
   }
-}; 
+};

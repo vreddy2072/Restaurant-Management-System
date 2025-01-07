@@ -38,5 +38,12 @@ class ShoppingCart(ShoppingCartBase):
     class Config:
         from_attributes = True
 
-# Alias for API responses
-CartResponse = ShoppingCart
+class CartResponse(BaseModel):
+    id: Optional[int] = None
+    user_id: Optional[int] = None
+    items: List[CartItem] = []
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
