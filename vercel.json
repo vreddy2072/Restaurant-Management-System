@@ -6,11 +6,25 @@
       "use": "@vercel/python",
       "config": {
         "runtime": "python3.11",
-        "maxLambdaSize": "15mb",
-        "installCommand": "pip install -r requirements.txt",
+        "maxLambdaSize": "250mb",
+        "installCommand": "pip install --no-cache-dir -r requirements.txt",
         "includeFiles": [
           "requirements.txt",
-          "backend/**/*.py"
+          "backend/api/**/*.py",
+          "backend/models/**/*.py",
+          "backend/services/**/*.py",
+          "backend/utils/**/*.py"
+        ],
+        "excludeFiles": [
+          "**/*.pyc",
+          "**/__pycache__/**",
+          "**/*.pyo",
+          "**/*.pyd",
+          "**/.Python",
+          "**/.env",
+          "**/venv/**",
+          "**/tests/**",
+          "**/.pytest_cache/**"
         ]
       }
     },
@@ -23,9 +37,18 @@
       }
     }
   ],
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/backend/api/app.py" },
-    { "source": "/(.*)", "destination": "/frontend/dist/index.html" }
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/api/app.py"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/dist/$1"
+    }
   ],
   "env": {
     "PYTHON_VERSION": "3.11",
