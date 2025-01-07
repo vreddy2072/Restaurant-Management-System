@@ -21,25 +21,16 @@
       }
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "backend/api/app.py"
+      "source": "/api/(.*)",
+      "destination": "backend/api/app.py"
     },
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/frontend/dist/$1"
+      "source": "/(.*)",
+      "destination": "/frontend/dist/$1"
     }
   ],
-  "env": {
-    "PYTHON_VERSION": "3.11",
-    "NODE_VERSION": "20.x",
-    "DATABASE_URL": "sqlite:///backend/database/restaurant.db",
-    "ALLOWED_ORIGINS": "https://*.vercel.app,http://localhost:5173,http://localhost:3000"
-  },
   "headers": [
     {
       "source": "/api/(.*)",
@@ -50,5 +41,11 @@
         { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization" }
       ]
     }
-  ]
+  ],
+  "env": {
+    "PYTHON_VERSION": "3.11",
+    "NODE_VERSION": "20.x",
+    "DATABASE_URL": "sqlite:///backend/database/restaurant.db",
+    "ALLOWED_ORIGINS": "https://*.vercel.app,http://localhost:5173,http://localhost:3000"
+  }
 }
