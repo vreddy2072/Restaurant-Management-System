@@ -5,28 +5,21 @@ import { MenuItem } from '../../../types/menu';
 
 const mockMenuItem: MenuItem = {
   id: 1,
-  name: "Veggie Supreme Pizza",
-  description: "Fresh vegetarian pizza with assorted toppings",
-  price: 14.99,
+  name: 'Test Item',
+  description: 'Test Description',
+  price: 9.99,
   category_id: 1,
+  category: { id: 1, name: 'Test Category' },
   is_vegetarian: true,
   is_vegan: false,
   is_gluten_free: false,
-  spice_level: 1,
-  preparation_time: 20,
-  average_rating: 4.5,
-  rating_count: 10,
-  is_active: true,
-  allergens: [
-    { id: 1, name: "gluten" },
-    { id: 2, name: "dairy" }
-  ],
-  customization_options: {
-    "Size": ["Small", "Medium", "Large"],
-    "Crust": ["Thin", "Regular", "Thick"]
-  },
-  created_at: "2024-01-02T12:00:00",
-  updated_at: "2024-01-02T12:00:00"
+  is_available: true,
+  spice_level: 2,
+  preparation_time: 15,
+  allergens: [],
+  image_url: 'test.jpg',
+  created_at: '2024-01-01',
+  updated_at: '2024-01-01'
 };
 
 describe('MenuItemDetail', () => {
@@ -34,10 +27,10 @@ describe('MenuItemDetail', () => {
     render(<MenuItemDetail menuItem={mockMenuItem} />);
 
     // Basic information
-    expect(screen.getByText('Veggie Supreme Pizza')).toBeInTheDocument();
-    expect(screen.getByText('Fresh vegetarian pizza with assorted toppings')).toBeInTheDocument();
-    expect(screen.getByText('$14.99')).toBeInTheDocument();
-    expect(screen.getByText('20 mins preparation time')).toBeInTheDocument();
+    expect(screen.getByText('Test Item')).toBeInTheDocument();
+    expect(screen.getByText('Test Description')).toBeInTheDocument();
+    expect(screen.getByText('$9.99')).toBeInTheDocument();
+    expect(screen.getByText('15 mins preparation time')).toBeInTheDocument();
 
     // Dietary preferences
     expect(screen.getByTestId('vegetarian-icon')).toBeInTheDocument();
@@ -45,7 +38,7 @@ describe('MenuItemDetail', () => {
     expect(screen.queryByTestId('gluten-free-icon')).not.toBeInTheDocument();
     
     // Spice level
-    expect(screen.getByTestId('spice-level-1')).toBeInTheDocument();
+    expect(screen.getByTestId('spice-level-2')).toBeInTheDocument();
 
     // Rating
     expect(screen.getByRole('img', { name: '4.5 Stars' })).toBeInTheDocument();
