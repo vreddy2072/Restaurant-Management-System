@@ -9,6 +9,7 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
+        "generate-html": "mkdir -p dist && cp index.html dist/",
         "start": "vite preview --port $PORT",
         "preview": "vite preview",
         "lint": "eslint .",
