@@ -16,4 +16,8 @@ app.add_middleware(
 
 @app.get("/api/test")
 async def test_endpoint():
-    return {"message": "API is working!"} 
+    return {"message": "API is working!"}
+
+# Add handler for Edge Function
+def handler(request):
+    return app(request) 
