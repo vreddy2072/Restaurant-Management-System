@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { User } from '../types/user';
+import { User, UserUpdate } from '../types/user';
 import { userService } from '../services/userService';
 import UserDialog from '../components/user/UserDialog';
 import ConfirmDialog from '../components/common/ConfirmDialog';
@@ -93,7 +93,16 @@ export const UserManagement: React.FC = () => {
   const handleSaveUser = async (userData: Partial<User>) => {
     try {
       if (selectedUser) {
-        await userService.updateUser(selectedUser.id, userData);
+        const updateData: UserUpdate = {
+          username: userData.username || '',
+          email: userData.email || '',
+          first_name: userData.first_name || '',
+          last_name: userData.last_name || '',
+          role: userData.role || 'staff',
+          is_active: userData.is_active ?? true,
+          phone_number: userData.phone_number || ''
+        };
+        await userService.updateUser(selectedUser.id, updateData);
         showSnackbar('User updated successfully', 'success');
       } else {
         await userService.createUser(userData as any);
