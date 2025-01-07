@@ -1,9 +1,11 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException, status
+from sqlalchemy import func
 
 from ..models.orm.menu import Category, MenuItem, Allergen
 from ..models.schemas.menu import CategoryCreate, CategoryUpdate, MenuItemCreate, MenuItemUpdate, AllergenCreate, AllergenUpdate, MenuItemFilters, MenuItem as MenuItemSchema
+from ..models.orm.rating import MenuItemRating
 
 class MenuService:
     @staticmethod
@@ -122,10 +124,21 @@ class MenuService:
         category_id: Optional[int] = None,
         active_only: bool = True
     ) -> List[MenuItemSchema]:
+        # First, get the average ratings for all menu items
+        ratings_subquery = db.query(
+            MenuItemRating.menu_item_id,
+            func.avg(MenuItemRating.rating).label('avg_rating'),
+            func.count(MenuItemRating.id).label('rating_count')
+        ).group_by(MenuItemRating.menu_item_id).subquery()
+
+        # Build the main query with a left join to include ratings
         query = db.query(MenuItem).options(
             joinedload(MenuItem.category),
             joinedload(MenuItem.allergens)
-        ).join(Category)
+        ).join(Category).outerjoin(
+            ratings_subquery,
+            MenuItem.id == ratings_subquery.c.menu_item_id
+        )
         
         if category_id:
             query = query.filter(MenuItem.category_id == category_id)
@@ -135,6 +148,16 @@ class MenuService:
             query = query.filter(Category.is_active == True)
         
         menu_items = query.offset(skip).limit(limit).all()
+        
+        # Update the average ratings and rating counts
+        for item in menu_items:
+            ratings = db.query(
+                func.avg(MenuItemRating.rating).label('avg_rating'),
+                func.count(MenuItemRating.id).label('rating_count')
+            ).filter(MenuItemRating.menu_item_id == item.id).first()
+            
+            item.average_rating = round(float(ratings.avg_rating), 1) if ratings.avg_rating else 0.0
+            item.rating_count = ratings.rating_count
         
         # Convert the menu items to their schema representation
         return [MenuItemSchema.from_orm(item) for item in menu_items]
@@ -152,10 +175,21 @@ class MenuService:
         active_only: bool = True
     ) -> List[MenuItemSchema]:
         """Filter menu items based on various criteria."""
+        # First, get the average ratings for all menu items
+        ratings_subquery = db.query(
+            MenuItemRating.menu_item_id,
+            func.avg(MenuItemRating.rating).label('avg_rating'),
+            func.count(MenuItemRating.id).label('rating_count')
+        ).group_by(MenuItemRating.menu_item_id).subquery()
+
+        # Build the main query with a left join to include ratings
         query = db.query(MenuItem).options(
             joinedload(MenuItem.category),
             joinedload(MenuItem.allergens)
-        ).join(Category)
+        ).join(Category).outerjoin(
+            ratings_subquery,
+            MenuItem.id == ratings_subquery.c.menu_item_id
+        )
 
         if active_only:
             query = query.filter(MenuItem.is_active == True)
@@ -181,9 +215,27 @@ class MenuService:
             query = query.filter(MenuItem.price <= max_price)
         
         if min_rating is not None:
-            query = query.filter(MenuItem.average_rating >= min_rating)
+            query = query.filter(
+                (ratings_subquery.c.avg_rating >= min_rating) |
+                (ratings_subquery.c.avg_rating.is_(None))
+            )
 
         menu_items = query.all()
+
+        # Update the average ratings and rating counts
+        for item in menu_items:
+            ratings = db.query(
+                func.avg(MenuItemRating.rating).label('avg_rating'),
+                func.count(MenuItemRating.id).label('rating_count')
+            ).filter(MenuItemRating.menu_item_id == item.id).first()
+            
+            item.average_rating = round(float(ratings.avg_rating), 1) if ratings.avg_rating else 0.0
+            item.rating_count = ratings.rating_count
+
+        # Filter out items that don't meet the minimum rating requirement
+        if min_rating is not None:
+            menu_items = [item for item in menu_items if item.average_rating >= min_rating]
+
         return [MenuItemSchema.from_orm(item) for item in menu_items]
 
     @staticmethod

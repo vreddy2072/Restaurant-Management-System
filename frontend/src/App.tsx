@@ -11,6 +11,7 @@ import { CartProvider, useCart } from './contexts/CartContext';
 import { SnackbarProvider } from './contexts/SnackbarContext';
 import Cart from './components/cart/Cart';
 import { AuthProvider } from './contexts/AuthContext';
+import FeedbackPage from './pages/FeedbackPage';
 
 function NavBar() {
   const navigate = useNavigate();
@@ -50,6 +51,15 @@ function NavBar() {
             >
               Cart
             </Button>
+            <Button 
+              color="inherit" 
+              component={Link} 
+              to="/feedback" 
+              size="small"
+              sx={{ mx: 1 }}
+            >
+              Feedback
+            </Button>
             <Button color="inherit" component={Link} to="/admin/menu" size="small">
               Manage Menu
             </Button>            
@@ -79,52 +89,40 @@ function App() {
         <AuthProvider>
           <CartProvider>
             <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
               minHeight: '100vh',
-              bgcolor: 'background.default',
-              display: 'flex',
-              flexDirection: 'column'
+              overflow: 'auto' 
             }}>
               <NavBar />
-              <Box 
+              <Container 
                 component="main" 
+                maxWidth={false}
                 sx={{ 
+                  mt: 4, 
+                  mb: 4, 
                   flex: 1,
-                  overflowY: 'auto',
-                  pt: 4,
-                  pb: 4
+                  overflow: 'auto',
+                  maxHeight: 'calc(100vh - 64px)', // Account for AppBar height
+                  px: 2 // Add horizontal padding instead of Container's default
                 }}
               >
-                <Container>
-                  <Routes>
-                    <Route path="/register" element={<RegisterForm />} />
-                    <Route path="/login" element={<LoginForm />} />
-                    <Route
-                      path="/cart"
-                      element={
-                        <ProtectedRoute>
-                          <Cart />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/admin/menu"
-                      element={
-                        <ProtectedRoute>
-                          <MenuManagement />
-                        </ProtectedRoute>
-                      }
-                    />                  
-                    <Route
-                      path="/"
-                      element={
-                        <ProtectedRoute>
-                          <Menu />
-                        </ProtectedRoute>
-                      }
-                    />
-                  </Routes>
-                </Container>
-              </Box>
+                <Routes>
+                  <Route path="/" element={<Menu />} />
+                  <Route path="/register" element={<RegisterForm />} />
+                  <Route path="/login" element={<LoginForm />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/feedback" element={<FeedbackPage />} />
+                  <Route
+                    path="/admin/menu"
+                    element={
+                      <ProtectedRoute>
+                        <MenuManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </Container>
             </Box>
           </CartProvider>
         </AuthProvider>

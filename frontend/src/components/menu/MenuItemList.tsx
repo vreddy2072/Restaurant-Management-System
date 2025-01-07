@@ -38,6 +38,7 @@ import { menuService } from '../../services/menuService';
 import type { MenuItem, Category } from '../../types/menu';
 import { MenuItemDialog } from './MenuItemDialog';
 import { MenuFilters } from './MenuFilters';
+import { ratingService } from '../../services/ratingService';
 
 export const MenuItemList: React.FC = () => {
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -134,22 +135,23 @@ export const MenuItemList: React.FC = () => {
         item.price <= activeFilters.priceRange[1];
 
       // Rating
-      const matchesRating = item.average_rating >= activeFilters.rating;
-
-      const matches = {
-        search: matchesSearch,
-        category: matchesCategory,
-        dietary: matchesDietary,
-        allergens: matchesAllergens,
-        price: matchesPrice,
-        rating: matchesRating
-      };
-
-      console.log(`Filtering item "${item.name}":`, matches);
+      console.log(`Rating check for ${item.name}:`, {
+        itemRating: item.average_rating,
+        minRating: activeFilters.rating,
+        passes: item.average_rating >= activeFilters.rating
+      });
+      const matchesRating = activeFilters.rating === 0 || (
+        item.average_rating !== undefined && 
+        item.average_rating >= activeFilters.rating
+      );
 
       return matchesSearch && matchesCategory && matchesDietary && 
         matchesAllergens && matchesPrice && matchesRating;
-    });
+    }).map(item => ({
+      ...item,
+      average_rating: item.average_rating || 0,
+      rating_count: item.rating_count || 0
+    }));
   };
 
   const handleEdit = (item: MenuItem) => {
@@ -386,12 +388,30 @@ export const MenuItemList: React.FC = () => {
       setLoading(true);
       console.log('Loading menu data...');
       const [menuItems, categoryList] = await Promise.all([
-        menuService.getMenuItems(),
+        menuService.getMenuItems(undefined, false),
         menuService.getCategories()
       ]);
       console.log('Loaded menu items:', menuItems);
       console.log('Loaded categories:', categoryList);
-      setItems(menuItems);
+      
+      // Fetch all average ratings at once
+      const ratingsPromises = menuItems.map(item => 
+        ratingService.getAverageRating(item.id)
+          .then(average => ({ id: item.id, average: average.average, total: average.total }))
+      );
+      const ratings = await Promise.all(ratingsPromises);
+      
+      // Update items with their ratings
+      const itemsWithRatings = menuItems.map(item => {
+        const rating = ratings.find(r => r.id === item.id);
+        return {
+          ...item,
+          average_rating: rating?.average || 0,
+          rating_count: rating?.total || 0
+        };
+      });
+      
+      setItems(itemsWithRatings);
       setCategories(categoryList);
     } catch (error) {
       console.error('Failed to load data:', error);

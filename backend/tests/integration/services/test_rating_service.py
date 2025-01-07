@@ -1,138 +1,147 @@
 import pytest
-from sqlalchemy.exc import IntegrityError
+from datetime import datetime
+from sqlalchemy.orm import Session
+
 from backend.services.rating_service import RatingService
-from backend.models.schemas.rating import MenuItemRatingCreate, RestaurantFeedbackCreate
+from backend.models.schemas.rating import RestaurantFeedbackCreate
+from backend.models.orm.rating import RestaurantFeedback
+from backend.models.orm.user import User
 
-def test_create_menu_item_rating(db_session, test_user, sample_menu_item):
-    service = RatingService(db_session)
-    rating_data = MenuItemRatingCreate(
-        menu_item_id=sample_menu_item.id,
-        rating=4,
-        comment="Great dish!"
+@pytest.fixture
+def test_user(db_session: Session) -> User:
+    """Create a test user for testing."""
+    user = User(
+        username="testuser",
+        email="test@example.com",
+        password_hash="hashedpass123",
+        first_name="Test",
+        last_name="User",
+        role="customer"
     )
-    
-    rating = service.create_menu_item_rating(rating_data, test_user.id)
-    assert rating.rating == 4
-    assert rating.comment == "Great dish!"
-    assert rating.user_id == test_user.id
-    assert rating.menu_item_id == sample_menu_item.id
+    db_session.add(user)
+    db_session.commit()
+    return user
 
-def test_duplicate_rating(db_session, test_user, sample_menu_item):
-    service = RatingService(db_session)
-    rating_data = MenuItemRatingCreate(
-        menu_item_id=sample_menu_item.id,
-        rating=4,
-        comment="First rating"
-    )
-    
-    service.create_menu_item_rating(rating_data, test_user.id)
-    
-    duplicate_rating = MenuItemRatingCreate(
-        menu_item_id=sample_menu_item.id,
-        rating=5,
-        comment="Second rating"
-    )
-    
-    with pytest.raises(ValueError, match="User has already rated this menu item"):
-        service.create_menu_item_rating(duplicate_rating, test_user.id)
+@pytest.fixture
+def rating_service(db_session: Session) -> RatingService:
+    """Create a RatingService instance for testing."""
+    return RatingService(db_session)
 
-def test_get_menu_item_ratings(db_session, test_user, sample_menu_item):
-    service = RatingService(db_session)
-    rating_data = MenuItemRatingCreate(
-        menu_item_id=sample_menu_item.id,
-        rating=4,
-        comment="Test rating"
-    )
-    
-    service.create_menu_item_rating(rating_data, test_user.id)
-    ratings = service.get_menu_item_ratings(sample_menu_item.id)
-    
-    assert len(ratings) == 1
-    assert ratings[0].rating == 4
-    assert ratings[0].comment == "Test rating"
-
-def test_update_menu_item_rating(db_session, test_user, sample_menu_item):
-    service = RatingService(db_session)
-    rating_data = MenuItemRatingCreate(
-        menu_item_id=sample_menu_item.id,
-        rating=4,
-        comment="Original rating"
-    )
-    
-    service.create_menu_item_rating(rating_data, test_user.id)
-    
-    updated_rating = MenuItemRatingCreate(
-        menu_item_id=sample_menu_item.id,
-        rating=5,
-        comment="Updated rating"
-    )
-    
-    result = service.update_menu_item_rating(test_user.id, sample_menu_item.id, updated_rating)
-    assert result.rating == 5
-    assert result.comment == "Updated rating"
-
-def test_delete_menu_item_rating(db_session, test_user, sample_menu_item):
-    service = RatingService(db_session)
-    rating_data = MenuItemRatingCreate(
-        menu_item_id=sample_menu_item.id,
-        rating=4,
-        comment="Test rating"
-    )
-    
-    service.create_menu_item_rating(rating_data, test_user.id)
-    assert service.delete_menu_item_rating(test_user.id, sample_menu_item.id) is True
-    assert service.get_user_menu_item_rating(test_user.id, sample_menu_item.id) is None
-
-def test_create_restaurant_feedback(db_session, test_user):
-    service = RatingService(db_session)
+def test_create_restaurant_feedback(db_session: Session, rating_service: RatingService, test_user: User):
+    # Create a new restaurant feedback
     feedback_data = RestaurantFeedbackCreate(
-        feedback_text="Great service!",
-        category="service"
+        feedback_text="Great experience overall!",
+        service_rating=5,
+        ambiance_rating=4,
+        cleanliness_rating=5,
+        value_rating=4
     )
+    feedback = rating_service.create_restaurant_feedback(feedback_data, test_user.id)
     
-    feedback = service.create_restaurant_feedback(feedback_data, test_user.id)
-    assert feedback.feedback_text == "Great service!"
-    assert feedback.category == "service"
+    # Verify the feedback was created correctly
     assert feedback.user_id == test_user.id
+    assert feedback.feedback_text == feedback_data.feedback_text
+    assert feedback.service_rating == feedback_data.service_rating
+    assert feedback.ambiance_rating == feedback_data.ambiance_rating
+    assert feedback.cleanliness_rating == feedback_data.cleanliness_rating
+    assert feedback.value_rating == feedback_data.value_rating
 
-def test_get_restaurant_feedback_by_category(db_session, test_user):
-    service = RatingService(db_session)
-    feedback_data1 = RestaurantFeedbackCreate(
-        feedback_text="Great service!",
-        category="service"
-    )
-    feedback_data2 = RestaurantFeedbackCreate(
-        feedback_text="Delicious food!",
-        category="food"
-    )
+def test_get_restaurant_feedback(db_session: Session, rating_service: RatingService, test_user: User):
+    # Create multiple feedback entries
+    feedback_data_list = [
+        RestaurantFeedbackCreate(
+            feedback_text="Great service!",
+            service_rating=5,
+            ambiance_rating=4,
+            cleanliness_rating=5,
+            value_rating=4
+        ),
+        RestaurantFeedbackCreate(
+            feedback_text="Good food but slow service",
+            service_rating=3,
+            ambiance_rating=4,
+            cleanliness_rating=4,
+            value_rating=3
+        )
+    ]
     
-    service.create_restaurant_feedback(feedback_data1, test_user.id)
-    service.create_restaurant_feedback(feedback_data2, test_user.id)
+    for feedback_data in feedback_data_list:
+        rating_service.create_restaurant_feedback(feedback_data, test_user.id)
     
-    service_feedback = service.get_restaurant_feedback(category="service")
-    assert len(service_feedback) == 1
-    assert service_feedback[0].feedback_text == "Great service!"
+    # Get all feedback
+    all_feedback = rating_service.get_restaurant_feedback()
+    assert len(all_feedback) == 2
 
-def test_invalid_feedback_category(db_session, test_user):
-    service = RatingService(db_session)
-    with pytest.raises(ValueError, match="Invalid category"):
-        service.get_restaurant_feedback(category="invalid_category")
+def test_get_user_feedback(db_session: Session, rating_service: RatingService, test_user: User):
+    # Create feedback for the test user
+    feedback_data = RestaurantFeedbackCreate(
+        feedback_text="Excellent experience!",
+        service_rating=5,
+        ambiance_rating=5,
+        cleanliness_rating=5,
+        value_rating=5
+    )
+    rating_service.create_restaurant_feedback(feedback_data, test_user.id)
+    
+    # Get user's feedback
+    user_feedback = rating_service.get_user_feedback(test_user.id)
+    assert len(user_feedback) == 1
+    assert user_feedback[0].user_id == test_user.id
+    assert user_feedback[0].feedback_text == feedback_data.feedback_text
 
-def test_get_user_feedback(db_session, test_user):
-    service = RatingService(db_session)
-    feedback_data1 = RestaurantFeedbackCreate(
-        feedback_text="Great service!",
-        category="service"
-    )
-    feedback_data2 = RestaurantFeedbackCreate(
-        feedback_text="Nice ambiance!",
-        category="ambiance"
-    )
+def test_get_restaurant_feedback_stats(db_session: Session, rating_service: RatingService, test_user: User):
+    # Create multiple feedback entries
+    feedback_data_list = [
+        RestaurantFeedbackCreate(
+            feedback_text="Great service!",
+            service_rating=5,
+            ambiance_rating=4,
+            cleanliness_rating=5,
+            value_rating=4
+        ),
+        RestaurantFeedbackCreate(
+            feedback_text="Good food but slow service",
+            service_rating=3,
+            ambiance_rating=4,
+            cleanliness_rating=4,
+            value_rating=3
+        )
+    ]
     
-    service.create_restaurant_feedback(feedback_data1, test_user.id)
-    service.create_restaurant_feedback(feedback_data2, test_user.id)
+    for feedback_data in feedback_data_list:
+        rating_service.create_restaurant_feedback(feedback_data, test_user.id)
     
-    user_feedback = service.get_user_feedback(test_user.id)
-    assert len(user_feedback) == 2
-    categories = {feedback.category for feedback in user_feedback}
-    assert categories == {"service", "ambiance"}
+    # Get feedback stats
+    stats = rating_service.get_restaurant_feedback_stats()
+    assert stats['total_reviews'] == 2
+    assert stats['average_service_rating'] == 4.0
+    assert stats['average_ambiance_rating'] == 4.0
+    assert stats['average_cleanliness_rating'] == 4.5
+    assert stats['average_value_rating'] == 3.5
+
+def test_get_recent_feedback(db_session: Session, rating_service: RatingService, test_user: User):
+    # Create multiple feedback entries
+    feedback_data_list = [
+        RestaurantFeedbackCreate(
+            feedback_text="Recent feedback",
+            service_rating=5,
+            ambiance_rating=4,
+            cleanliness_rating=5,
+            value_rating=4
+        ),
+        RestaurantFeedbackCreate(
+            feedback_text="Older feedback",
+            service_rating=3,
+            ambiance_rating=4,
+            cleanliness_rating=4,
+            value_rating=3
+        )
+    ]
+    
+    for feedback_data in feedback_data_list:
+        rating_service.create_restaurant_feedback(feedback_data, test_user.id)
+    
+    # Get recent feedback (limit to 1)
+    recent_feedback = rating_service.get_recent_feedback(limit=1)
+    assert len(recent_feedback) == 1
+    assert recent_feedback[0].feedback_text == "Recent feedback"

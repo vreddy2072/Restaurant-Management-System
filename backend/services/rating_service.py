@@ -65,25 +65,48 @@ class RatingService:
         db_feedback = RestaurantFeedback(
             user_id=user_id,
             feedback_text=feedback.feedback_text,
-            category=feedback.category
+            service_rating=feedback.service_rating,
+            ambiance_rating=feedback.ambiance_rating,
+            cleanliness_rating=feedback.cleanliness_rating,
+            value_rating=feedback.value_rating
         )
         self.db.add(db_feedback)
         self.db.commit()
         self.db.refresh(db_feedback)
         return db_feedback
 
-    def get_restaurant_feedback(self, category: Optional[str] = None) -> List[RestaurantFeedback]:
-        """Get all restaurant feedback, optionally filtered by category."""
-        query = self.db.query(RestaurantFeedback)
-        if category:
-            if category not in RestaurantFeedback.VALID_CATEGORIES:
-                raise ValueError(f"Invalid category. Must be one of: {', '.join(RestaurantFeedback.VALID_CATEGORIES)}")
-            query = query.filter(RestaurantFeedback.category == category)
-        return query.all()
+    def get_restaurant_feedback(self) -> List[RestaurantFeedback]:
+        """Get all restaurant feedback."""
+        return self.db.query(RestaurantFeedback).all()
 
     def get_user_feedback(self, user_id: int) -> List[RestaurantFeedback]:
         """Get all feedback from a specific user."""
         return self.db.query(RestaurantFeedback).filter(RestaurantFeedback.user_id == user_id).all()
+
+    def get_restaurant_feedback_stats(self) -> Dict[str, any]:
+        """Get statistics for restaurant feedback."""
+        result = self.db.query(
+            func.avg(RestaurantFeedback.service_rating).label('avg_service'),
+            func.avg(RestaurantFeedback.ambiance_rating).label('avg_ambiance'),
+            func.avg(RestaurantFeedback.cleanliness_rating).label('avg_cleanliness'),
+            func.avg(RestaurantFeedback.value_rating).label('avg_value'),
+            func.count(RestaurantFeedback.id).label('total')
+        ).first()
+
+        return {
+            'average_service_rating': round(float(result.avg_service), 1) if result.avg_service else 0.0,
+            'average_ambiance_rating': round(float(result.avg_ambiance), 1) if result.avg_ambiance else 0.0,
+            'average_cleanliness_rating': round(float(result.avg_cleanliness), 1) if result.avg_cleanliness else 0.0,
+            'average_value_rating': round(float(result.avg_value), 1) if result.avg_value else 0.0,
+            'total_reviews': result.total
+        }
+
+    def get_recent_feedback(self, limit: int = 5) -> List[RestaurantFeedback]:
+        """Get the most recent restaurant feedback."""
+        return self.db.query(RestaurantFeedback)\
+            .order_by(RestaurantFeedback.created_at.desc())\
+            .limit(limit)\
+            .all()
 
     def get_menu_item_average_rating(self, menu_item_id: int) -> Dict[str, any]:
         """Get the average rating and total number of ratings for a menu item."""

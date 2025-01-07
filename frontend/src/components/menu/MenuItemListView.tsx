@@ -25,6 +25,7 @@ import {
 } from '@mui/icons-material';
 import type { MenuItem } from '../../types/menu';
 import { styled } from '@mui/material/styles';
+import RatingComponent from '../menu/RatingComponent';
 
 interface MenuItemListViewProps {
   item: MenuItem;
@@ -157,7 +158,15 @@ export const MenuItemListView: React.FC<MenuItemListViewProps> = ({
             <Typography variant="body2" color="text.secondary" component="div" gutterBottom>
               {item.description}
             </Typography>
-            {renderDietaryIcons()}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
+              {renderDietaryIcons()}
+              <RatingComponent
+                menuItemId={item.id}
+                initialRating={item.average_rating}
+                initialRatingCount={item.rating_count}
+                readOnly
+              />
+            </Box>
           </Box>
         }
       />

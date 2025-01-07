@@ -45,17 +45,17 @@ export const MenuManagement: React.FC = () => {
 
           <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
             <Tabs value={activeTab} onChange={handleTabChange}>
+            <Tab label="Menu Items" />
               <Tab label="Categories" />
-              <Tab label="Menu Items" />
             </Tabs>
           </Box>
 
           {activeTab === 0 && (
-            <CategoryList />
+            <MenuItemList />
           )}
 
           {activeTab === 1 && (
-            <MenuItemList />
+            <CategoryList />
           )}
         </Paper>
       </Container>

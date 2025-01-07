@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Grid,
@@ -37,6 +37,7 @@ import { menuService } from '../services/menuService';
 import { MenuFilters, MenuFilterValues } from '../components/menu/MenuFilters';
 import { useCart } from '../contexts/CartContext';
 import RatingComponent from '../components/menu/RatingComponent';
+import { ratingService, RatingAverage } from '../services/ratingService';
 
 const Menu: React.FC = () => {
   const { addToCart, loading: cartLoading } = useCart();
@@ -46,6 +47,7 @@ const Menu: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [itemAverageRatings, setItemAverageRatings] = useState<Record<number, number>>({});
   const [activeFilters, setActiveFilters] = useState<MenuFilterValues>({
     is_vegetarian: false,
     is_vegan: false,
@@ -57,6 +59,19 @@ const Menu: React.FC = () => {
     try {
       const items = await menuService.getMenuItems();
       setMenuItems(items);
+      
+      // Fetch all average ratings at once
+      const ratingsPromises = items.map(item => 
+        ratingService.getAverageRating(item.id)
+          .then(average => ({ id: item.id, average: average.average }))
+      );
+      const ratings = await Promise.all(ratingsPromises);
+      const ratingsMap = ratings.reduce((acc, { id, average }) => {
+        acc[id] = average;
+        return acc;
+      }, {} as Record<number, number>);
+      setItemAverageRatings(ratingsMap);
+      
       setError(null);
     } catch (err) {
       console.error('Error fetching menu items:', err);
@@ -111,13 +126,14 @@ const Menu: React.FC = () => {
           activeFilters.allergen_exclude.includes(allergen.name)
         );
 
-      // Apply rating filter
+      // Apply rating filter using the stored average ratings
+      const itemAverageRating = itemAverageRatings[item.id] || 0;
       const matchesRating = !activeFilters.min_rating || 
-        (item.average_rating && item.average_rating >= activeFilters.min_rating);
+        (itemAverageRating >= activeFilters.min_rating);
 
       return matchesSearch && matchesCategory && matchesDietary && matchesAllergens && matchesRating;
     });
-  }, [menuItems, searchQuery, categoryFilter, activeFilters]);
+  }, [menuItems, searchQuery, categoryFilter, activeFilters, itemAverageRatings]);
 
   const categories = ['all', ...new Set(menuItems
     .filter(item => item.category)
@@ -148,6 +164,27 @@ const Menu: React.FC = () => {
       console.error('Failed to add item to cart:', err);
     }
   };
+
+  const handleRatingChange = useCallback(async (itemId: number, newRating: number) => {
+    setMenuItems(prevItems => {
+      const updatedItems = [...prevItems];
+      const itemIndex = updatedItems.findIndex(mi => mi.id === itemId);
+      if (itemIndex !== -1) {
+        updatedItems[itemIndex] = {
+          ...updatedItems[itemIndex],
+          average_rating: newRating
+        };
+      }
+      return updatedItems;
+    });
+  }, []);
+
+  const handleAverageRatingChange = useCallback((itemId: number, average: RatingAverage) => {
+    setItemAverageRatings(prev => ({
+      ...prev,
+      [itemId]: average.average
+    }));
+  }, []);
 
   const renderMenuItem = (item: MenuItemType) => (
     <ListItem
@@ -186,15 +223,9 @@ const Menu: React.FC = () => {
                 <RatingComponent
                   menuItemId={item.id}
                   initialRating={item.average_rating}
-                  onRatingChange={(newRating) => {
-                    // Update the item's rating in the local state
-                    const updatedItems = menuItems.map(menuItem => 
-                      menuItem.id === item.id 
-                        ? { ...menuItem, average_rating: newRating }
-                        : menuItem
-                    );
-                    setMenuItems(updatedItems);
-                  }}
+                  initialRatingCount={item.rating_count || 0}
+                  onRatingChange={(newRating) => handleRatingChange(item.id, newRating)}
+                  onAverageRatingChange={(average) => handleAverageRatingChange(item.id, average)}
                 />
               </Box>
               <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
@@ -353,9 +384,6 @@ const Menu: React.FC = () => {
         onClose={() => setFilterDrawerOpen(false)}
       >
         <Box sx={{ width: 300, p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Filters
-          </Typography>
           <MenuFilters
             onFilterChange={handleFilterChange}
             availableAllergens={getAllergens()}
