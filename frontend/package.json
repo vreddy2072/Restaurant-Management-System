@@ -3,11 +3,15 @@
     "private": true,
     "version": "0.0.0",
     "type": "module",
+    "engines": {
+        "node": "20.x"
+    },
     "scripts": {
         "dev": "vite",
-        "build": "tsc -b && vite build",
-        "lint": "eslint .",
+        "build": "tsc && vite build",
+        "start": "vite preview --port $PORT",
         "preview": "vite preview",
+        "lint": "eslint .",
         "test": "jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
