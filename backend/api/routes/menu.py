@@ -9,19 +9,20 @@ from backend.models.schemas.menu import (
     Category, CategoryCreate, CategoryUpdate,
     MenuItem, MenuItemCreate, MenuItemUpdate,
     Allergen, AllergenCreate, AllergenUpdate,
-    MenuResponse, CategoryWithItems, MenuItemFilters
+    MenuResponse, CategoryWithItems, MenuItemFilters,
+    RatingCreate
 )
 from backend.services.menu import MenuService
 from backend.utils.database import get_db
 
-router = APIRouter(prefix="/menu", tags=["menu"])
+router = APIRouter(prefix="/api/menu", tags=["menu"])
 
 # Create images directory if it doesn't exist
 IMAGES_DIR = Path("static/images")
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
 # Category routes
-@router.post("/categories/", response_model=Category)
+@router.post("/categories/", response_model=Category, status_code=201)
 def create_category(category: CategoryCreate, db: Session = Depends(get_db)):
     """Create a new menu category"""
     return MenuService.create_category(db, category)
@@ -39,7 +40,10 @@ def get_categories(
 @router.get("/categories/{category_id}", response_model=Category)
 def get_category(category_id: int, db: Session = Depends(get_db)):
     """Get a specific menu category by ID"""
-    return MenuService.get_category(db, category_id)
+    category = MenuService.get_category(db, category_id)
+    if not category.is_active:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return category
 
 @router.api_route("/categories/{category_id}", methods=["PUT", "PATCH"], response_model=Category)
 def update_category(
@@ -57,10 +61,18 @@ def delete_category(category_id: int, db: Session = Depends(get_db)):
     return {"message": "Category deleted successfully"}
 
 # Menu item routes
-@router.post("/items/", response_model=MenuItem)
+@router.post("/items/", response_model=MenuItem, status_code=201)
 def create_menu_item(menu_item: MenuItemCreate, db: Session = Depends(get_db)):
     """Create a new menu item"""
-    return MenuService.create_menu_item(db, menu_item)
+    try:
+        return MenuService.create_menu_item(db, menu_item)
+    except HTTPException as e:
+        if e.status_code == 404:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Category with id {menu_item.category_id} not found"
+            )
+        raise e
 
 @router.get("/items/", response_model=List[MenuItem])
 def get_menu_items(
@@ -73,10 +85,34 @@ def get_menu_items(
     """Get all menu items, optionally filtered by category"""
     return MenuService.get_menu_items(db, skip, limit, category_id, active_only)
 
+@router.get("/items/filter", response_model=List[MenuItem])
+def filter_menu_items(
+    is_vegetarian: Optional[bool] = None,
+    is_vegan: Optional[bool] = None,
+    is_gluten_free: Optional[bool] = None,
+    allergen_exclude_ids: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Filter menu items by dietary preferences and allergens"""
+    allergen_ids = []
+    if allergen_exclude_ids:
+        allergen_ids = [int(id) for id in allergen_exclude_ids.split(",")]
+    
+    return MenuService.filter_menu_items(
+        db,
+        is_vegetarian=is_vegetarian,
+        is_vegan=is_vegan,
+        is_gluten_free=is_gluten_free,
+        allergen_exclude_ids=allergen_ids
+    )
+
 @router.get("/items/{item_id}", response_model=MenuItem)
 def get_menu_item(item_id: int, db: Session = Depends(get_db)):
     """Get a specific menu item by ID"""
-    return MenuService.get_menu_item(db, item_id)
+    item = MenuService.get_menu_item(db, item_id)
+    if not item.is_active:
+        raise HTTPException(status_code=404, detail="Menu item not found")
+    return item
 
 @router.api_route("/items/{item_id}", methods=["PUT", "PATCH"], response_model=MenuItem)
 def update_menu_item(
@@ -92,6 +128,142 @@ def delete_menu_item(item_id: int, db: Session = Depends(get_db)):
     """Soft delete a menu item"""
     MenuService.delete_menu_item(db, item_id)
     return {"message": "Menu item deleted successfully"}
+
+@router.post("/items/{item_id}/rate")
+def rate_menu_item(
+    item_id: int,
+    rating_data: RatingCreate,
+    db: Session = Depends(get_db)
+):
+    """Rate a menu item"""
+    item = MenuService.get_menu_item(db, item_id)
+    if not item.is_active:
+        raise HTTPException(status_code=404, detail="Menu item not found")
+    
+    # Update rating
+    if item.rating_count is None:
+        item.rating_count = 0
+        item.average_rating = 0
+    
+    item.rating_count += 1
+    item.average_rating = ((item.average_rating * (item.rating_count - 1)) + rating_data.rating) / item.rating_count
+    db.commit()
+    db.refresh(item)
+    
+    return {
+        "id": item.id,
+        "average_rating": item.average_rating,
+        "rating_count": item.rating_count
+    }
+
+@router.post("/items/{item_id}/customize", response_model=MenuItem)
+def customize_menu_item(
+    item_id: int,
+    customization: dict,
+    db: Session = Depends(get_db)
+):
+    """Customize a menu item with selected options"""
+    item = MenuService.get_menu_item(db, item_id)
+    if not item.is_active:
+        raise HTTPException(status_code=404, detail="Menu item not found")
+    
+    # Validate customization options
+    if not item.customization_options:
+        raise HTTPException(
+            status_code=400,
+            detail="This item does not support customization"
+        )
+    
+    # Validate each customization option
+    for option, value in customization.items():
+        if option not in item.customization_options:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid customization option: {option}"
+            )
+        
+        valid_values = item.customization_options[option]
+        if isinstance(value, list):
+            for v in value:
+                if v not in valid_values:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Invalid value '{v}' for option '{option}'"
+                    )
+        else:
+            if value not in valid_values:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid value '{value}' for option '{option}'"
+                )
+    
+    # Store customization with the menu item
+    item.selected_customization = customization
+    db.commit()
+    db.refresh(item)
+    
+    return item
+
+@router.get("/full", response_model=List[CategoryWithItems])
+def get_full_menu(
+    active_only: bool = Query(True),
+    db: Session = Depends(get_db)
+):
+    """Get the full menu with categories and items"""
+    categories = MenuService.get_categories(db, active_only=active_only)
+    menu_items = MenuService.get_menu_items(db, active_only=active_only)
+    
+    # Group menu items by category
+    menu_by_category = []
+    for category in categories:
+        category_items = [item for item in menu_items if item.category_id == category.id]
+        menu_by_category.append(CategoryWithItems(
+            **category.__dict__,
+            menu_items=category_items
+        ))
+    
+    return menu_by_category
+
+@router.post("/items/{item_id}/image")
+async def upload_menu_item_image(
+    item_id: int,
+    file: UploadFile,
+    db: Session = Depends(get_db)
+):
+    """Upload an image for a menu item"""
+    item = MenuService.get_menu_item(db, item_id)
+    if not item.is_active:
+        raise HTTPException(status_code=404, detail="Menu item not found")
+    
+    # Validate file type
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=400,
+            detail="File must be an image"
+        )
+    
+    # Create unique filename
+    file_extension = os.path.splitext(file.filename)[1]
+    filename = f"menu_item_{item_id}{file_extension}"
+    file_path = IMAGES_DIR / filename
+    
+    # Save file
+    try:
+        contents = await file.read()
+        with file_path.open("wb") as buffer:
+            buffer.write(contents)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Could not upload image"
+        )
+    
+    # Update menu item with image URL
+    item.image_url = f"/static/images/{filename}"
+    db.commit()
+    db.refresh(item)
+    
+    return {"image_url": item.image_url}
 
 # Allergen endpoints
 @router.post("/allergens/", response_model=Allergen, status_code=201)

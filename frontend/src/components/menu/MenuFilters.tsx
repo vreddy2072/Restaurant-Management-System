@@ -114,20 +114,26 @@ export const MenuFilters: React.FC<MenuFiltersProps> = ({
       <Box sx={{ mt: 2 }}>
         <Typography gutterBottom>Exclude Allergens</Typography>
         <FormGroup>
-          {availableAllergens.map((allergen) => (
-            <FormControlLabel
-              key={allergen}
-              control={
-                <Checkbox
-                  checked={filters.allergen_exclude.includes(allergen)}
-                  onChange={(e) => handleAllergenChange(allergen, e.target.checked)}
-                />
-              }
-              label={allergen.replace('_', ' ')}
-            />
-          ))}
+          {(availableAllergens || []).length > 0 ? (
+            availableAllergens.map((allergen) => (
+              <FormControlLabel
+                key={allergen}
+                control={
+                  <Checkbox
+                    checked={filters.allergen_exclude.includes(allergen)}
+                    onChange={(e) => handleAllergenChange(allergen, e.target.checked)}
+                  />
+                }
+                label={allergen.split('_').join(' ')}
+              />
+            ))
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              No allergens defined in menu items
+            </Typography>
+          )}
         </FormGroup>
       </Box>
     </Box>
   );
-}; 
+};

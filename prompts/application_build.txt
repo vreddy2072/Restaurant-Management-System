@@ -2,7 +2,7 @@
 
 ## Project Structure
 ```
-restaurant-app/
+restaurant-management-system/
 ├── backend/               # Python backend package
 │   ├── api/              # FastAPI routes and app
 │   │   ├── routes/       # API route handlers

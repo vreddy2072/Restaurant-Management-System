@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import { server } from './mocks/server';
+import { TextEncoder, TextDecoder } from 'util';
 
 // Configure testing environment
 window.HTMLElement.prototype.scrollIntoView = jest.fn();
@@ -16,6 +17,10 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: jest.fn(),
   })),
 });
+
+// Add TextEncoder/TextDecoder to global scope for tests
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder as any;
 
 // Setup MSW
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));

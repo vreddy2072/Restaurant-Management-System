@@ -12,7 +12,7 @@ export interface MenuItem {
   preparation_time: number;
   average_rating: number;
   rating_count: number;
-  allergens: string[];
+  allergens: Allergen[];
   customization_options: {
     [key: string]: string[];
   };
@@ -40,12 +40,17 @@ export interface CategoryUpdate extends Partial<CategoryCreate> {
   id?: never;
 }
 
-export interface MenuItemCreate extends Omit<MenuItem, 'id' | 'created_at' | 'updated_at'> {
+export interface Allergen {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+export interface MenuItemCreate extends Omit<MenuItem, 'id' | 'created_at' | 'updated_at' | 'allergens'> {
   category_id: number;
+  allergen_ids: number[];
 }
 
 export interface MenuItemUpdate extends Partial<MenuItemCreate> {
   id?: never;
 }
-
-export type Allergen = string; 

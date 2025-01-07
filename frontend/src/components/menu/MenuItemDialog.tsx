@@ -17,9 +17,11 @@ import {
   Slider,
   Typography,
   Chip,
-  Stack
+  Stack,
+  OutlinedInput,
+  SelectChangeEvent
 } from '@mui/material';
-import { MenuItem as MenuItemType, Category, MenuItemUpdate, MenuItemCreate } from '../../types/menu';
+import { MenuItem as MenuItemType, Category, MenuItemUpdate, MenuItemCreate, Allergen } from '../../types/menu';
 import { PhotoCamera } from '@mui/icons-material';
 import { menuService } from '../../services/menuService';
 
@@ -49,12 +51,29 @@ export const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
     spice_level: 0,
     preparation_time: 15,
     allergens: [],
-    customization_options: {}
+    customization_options: {},
+    is_active: true
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [allergens, setAllergens] = useState<Allergen[]>([]);
+
+  useEffect(() => {
+    const loadAllergens = async () => {
+      try {
+        console.log('Loading allergens...');
+        const allAllergens = await menuService.getAllergens();
+        console.log('Loaded allergens:', allAllergens);
+        setAllergens(allAllergens);
+      } catch (error) {
+        console.error('Failed to load allergens:', error);
+        setError('Failed to load allergens. Please try again.');
+      }
+    };
+    loadAllergens();
+  }, []);
 
   useEffect(() => {
     if (item) {
@@ -68,8 +87,9 @@ export const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
         is_gluten_free: item.is_gluten_free,
         spice_level: item.spice_level,
         preparation_time: item.preparation_time,
-        allergens: [...item.allergens],
-        customization_options: { ...item.customization_options }
+        allergens: Array.isArray(item.allergens) ? [...item.allergens] : [],
+        customization_options: { ...item.customization_options },
+        is_active: item.is_active
       });
       setImagePreview(item.image_url || '');
     } else {
@@ -84,7 +104,8 @@ export const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
         spice_level: 0,
         preparation_time: 15,
         allergens: [],
-        customization_options: {}
+        customization_options: {},
+        is_active: true
       });
       setImagePreview('');
     }
@@ -94,6 +115,28 @@ export const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
 
   const handleChange = (field: keyof MenuItemType, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAllergenChange = (allergenId: number) => {
+    const currentAllergens = formData.allergens || [];
+    const allergen = allergens.find(a => a.id === allergenId);
+    
+    if (!allergen) return;
+    
+    const newAllergens = currentAllergens.some(a => a.id === allergenId)
+      ? currentAllergens.filter(a => a.id !== allergenId)
+      : [...currentAllergens, allergen];
+    
+    console.log('Allergen toggle:', {
+      allergenId,
+      currentAllergens,
+      newAllergens
+    });
+    
+    setFormData(prev => ({
+      ...prev,
+      allergens: newAllergens
+    }));
   };
 
   const validateForm = () => {
@@ -133,20 +176,48 @@ export const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
 
     try {
       setLoading(true);
-      let savedItem;
       
-      // First save the menu item
+      // Log initial form data
+      console.log('Form data before submission:', formData);
+      console.log('Allergens in form data:', formData.allergens);
+      
+      const dataToSave: MenuItemCreate = {
+        name: formData.name || '',
+        description: formData.description || '',
+        price: Number(formData.price) || 0,
+        category_id: Number(formData.category_id) || 0,
+        is_active: Boolean(formData.is_active),
+        is_vegetarian: Boolean(formData.is_vegetarian),
+        is_vegan: Boolean(formData.is_vegan),
+        is_gluten_free: Boolean(formData.is_gluten_free),
+        spice_level: Number(formData.spice_level) || 0,
+        preparation_time: Number(formData.preparation_time) || 0,
+        allergen_ids: formData.allergens?.map(allergen => allergen.id) || [],
+        customization_options: formData.customization_options || {},
+        average_rating: 0,
+        rating_count: 0
+      };
+      
+      // Log the exact data being sent
+      console.log('Data being sent to API:', JSON.stringify(dataToSave, null, 2));
+      
+      let savedItem;
       if (item) {
-        savedItem = await menuService.updateMenuItem(item.id, formData as MenuItemUpdate);
+        console.log('Updating item with ID:', item.id);
+        savedItem = await menuService.updateMenuItem(item.id, dataToSave);
       } else {
-        savedItem = await menuService.createMenuItem(formData as MenuItemCreate);
+        console.log('Creating new item');
+        savedItem = await menuService.createMenuItem(dataToSave);
       }
       
-      // If there's a new image file, upload it
-      if (imageFile && savedItem.id) {
+      // Log the response
+      console.log('API Response:', savedItem);
+      console.log('Allergens in response:', savedItem?.allergens);
+      
+      if (imageFile && savedItem?.id) {
         try {
           const updatedItem = await menuService.uploadImage(savedItem.id, imageFile);
-          console.log('Image uploaded successfully:', updatedItem); // Debug log
+          console.log('Image uploaded successfully:', updatedItem);
           savedItem = updatedItem;
         } catch (error) {
           console.error('Failed to upload image:', error);
@@ -155,20 +226,27 @@ export const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
         }
       }
       
-      await onSave(savedItem);
-      onClose();
-    } catch (error) {
-      setError('Failed to save menu item. Please try again.');
+      if (savedItem) {
+        await onSave(savedItem);
+        onClose();
+      } else {
+        throw new Error('Failed to save menu item: No response from server');
+      }
+    } catch (error: any) {
       console.error('Failed to save menu item:', error);
+      let errorMessage = 'Failed to save menu item. Please try again.';
+      if (error.response?.data?.detail) {
+        errorMessage = typeof error.response.data.detail === 'string' 
+          ? error.response.data.detail 
+          : 'Validation error occurred. Please check your input.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
-
-  const commonAllergens = [
-    'dairy', 'eggs', 'fish', 'shellfish', 'tree_nuts',
-    'peanuts', 'wheat', 'soy', 'sesame'
-  ];
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -176,7 +254,7 @@ export const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
+            <Typography>{error}</Typography>
           </Alert>
         )}
 
@@ -317,20 +395,14 @@ export const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
         <Box sx={{ mt: 2 }}>
           <Typography gutterBottom>Allergens</Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {commonAllergens.map((allergen) => (
+            {allergens.map((allergen) => (
               <Chip
-                key={allergen}
-                label={allergen.replace('_', ' ')}
-                onClick={() => {
-                  const allergens = formData.allergens || [];
-                  const newAllergens = allergens.includes(allergen)
-                    ? allergens.filter(a => a !== allergen)
-                    : [...allergens, allergen];
-                  handleChange('allergens', newAllergens);
-                }}
-                color={formData.allergens?.includes(allergen) ? 'primary' : 'default'}
-                variant={formData.allergens?.includes(allergen) ? 'filled' : 'outlined'}
-                sx={{ mb: 1 }}
+                key={allergen.id}
+                label={allergen.name}
+                onClick={() => handleAllergenChange(allergen.id)}
+                color={formData.allergens?.some(a => a.id === allergen.id) ? 'primary' : 'default'}
+                variant={formData.allergens?.some(a => a.id === allergen.id) ? 'filled' : 'outlined'}
+                sx={{ m: 0.5 }}
               />
             ))}
           </Stack>
@@ -349,4 +421,4 @@ export const MenuItemDialog: React.FC<MenuItemDialogProps> = ({
       </DialogActions>
     </Dialog>
   );
-}; 
+};

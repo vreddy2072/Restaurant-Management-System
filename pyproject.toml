@@ -3,7 +3,7 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "restaurant-app"
+name = "restaurant-management-system"
 version = "0.1.0"
 description = "Restaurant Application"
 authors = [
@@ -49,7 +49,6 @@ include = '\.pyi?$'
 [tool.ruff]
 line-length = 100
 select = ["E", "F", "I", "N", "W", "B"]
-ignore = []
 
 [tool.mypy]
 python_version = "3.9"

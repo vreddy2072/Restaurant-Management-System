@@ -7,7 +7,7 @@ from alembic import context
 
 from backend.utils.database import Base
 from backend.models.orm.menu import Category, MenuItem, Allergen  # Import all models
-from backend.app.models.user import User  # Import User model
+from backend.models.orm.user import User  # Import User model
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -22,10 +22,19 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 target_metadata = Base.metadata
 
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
+# Get database type from environment variable (default to main)
+import os
+from pathlib import Path
+
+# Get the absolute path to the backend directory
+BACKEND_DIR = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+db_path = BACKEND_DIR / "database"
+
+# Set the database URL based on environment
+if os.getenv("TESTING", "0") == "1":
+    db_url = f"sqlite:///{db_path}/test.db"
+    config.set_main_option('sqlalchemy.url', db_url)
+    print(f"Running migrations on test database: {db_url}")
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
