@@ -101,6 +101,24 @@ export const UserManagement: React.FC = () => {
     }
   };
 
+  const handleUpdateUser = async (userData: Partial<User>) => {
+    if (!userData.id) return;
+    try {
+        const updateData: UserUpdate = {
+            username: userData.username,
+            email: userData.email,
+            first_name: userData.first_name,
+            last_name: userData.last_name,
+            role: userData.role,
+            is_active: userData.is_active
+        };
+        await userService.updateUser(userData.id, updateData);
+        fetchUsers();
+    } catch (error) {
+        console.error('Error updating user:', error);
+    }
+  };
+
   return (
     <Box p={3}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
