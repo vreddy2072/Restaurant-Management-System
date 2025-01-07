@@ -6,7 +6,12 @@
       "use": "@vercel/python",
       "config": {
         "runtime": "python3.11",
-        "maxLambdaSize": "15mb"
+        "maxLambdaSize": "15mb",
+        "installCommand": "pip install -r backend/requirements.txt",
+        "includeFiles": [
+          "backend/requirements.txt",
+          "backend/**"
+        ]
       }
     },
     {
