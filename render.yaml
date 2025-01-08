@@ -13,7 +13,7 @@ services:
       - key: DATABASE_URL
         value: sqlite:///backend/database/restaurant.db
       - key: ALLOWED_ORIGINS
-        value: "*"
+        value: "https://restaurant-management-system-e0fkd5c01-vinesh-vonterus-projects.vercel.app,http://localhost:5173,http://localhost:3000"
       - key: JWT_SECRET_KEY
         value: "TRYXQMbll9xoTZohCfcf2UGuF62cr5xVTN+ADmb8SXY="
       - key: ENVIRONMENT
@@ -24,6 +24,10 @@ services:
         value: "GET,POST,PUT,DELETE,PATCH,OPTIONS"
       - key: CORS_ALLOW_HEADERS
         value: "*"
-    healthCheckPath: /test
+      - key: CORS_EXPOSE_HEADERS
+        value: "*"
+      - key: CORS_MAX_AGE
+        value: "3600"
+    healthCheckPath: /health
     healthCheckInterval: 60s
     autoDeploy: true 

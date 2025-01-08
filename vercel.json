@@ -17,15 +17,17 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://restaurant-management-system-5c3x.onrender.com/$1"
+      "dest": "https://restaurant-management-system-5c3x.onrender.com/api/$1",
+      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
+        "Access-Control-Allow-Headers": "*"
+      },
+      "continue": true
     },
     {
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1"
-    },
-    {
-      "src": "/(.*)\\.(?:js|css|svg|ico)$",
-      "dest": "/$1.$2"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
