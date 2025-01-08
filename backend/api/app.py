@@ -85,9 +85,30 @@ app.add_middleware(
 )
 
 # Mount static files directory
-static_dir = Path("static")
-static_dir.mkdir(exist_ok=True)
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
+BASE_PATH = os.getenv('STATIC_PATH', os.path.join(os.getcwd(), 'static'))
+static_dir = Path(BASE_PATH)
+logger.info(f"Using static directory: {static_dir}")
+
+static_dir.mkdir(parents=True, exist_ok=True)
+images_dir = static_dir / "images"
+images_dir.mkdir(parents=True, exist_ok=True)
+
+# Mount static files with custom configuration
+app.mount("/static", StaticFiles(directory=static_dir, html=True), name="static")
+
+# Add middleware to handle static file headers
+@app.middleware("http")
+async def add_cache_control_header(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/static/"):
+        # Cache static files for 1 hour
+        response.headers["Cache-Control"] = "public, max-age=3600"
+        # Allow CORS for static files
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        # Add security headers
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+    return response
 
 # Add exception handler for better error reporting
 @app.exception_handler(Exception)
