@@ -40,17 +40,46 @@ app = FastAPI(
 origins = [
     "http://localhost:5173",  # Local development
     "http://localhost:3000",  # Local production build
-    "https://restaurant-management-system-j708nvl5l-vinesh-vonterus-projects.vercel.app",  # Vercel deployment
+    "https://restaurant-management-system-*.vercel.app",  # Vercel preview deployments
+    "https://restaurant-management-system.vercel.app",  # Vercel production
     "https://restaurant-management-system-5c3x.onrender.com"  # Render deployment
 ]
+
+# Log the configured origins
 logger.debug(f"Configured CORS origins: {origins}")
+
+# Function to validate origin
+def validate_origin(origin: str) -> bool:
+    if not origin:
+        return False
+    # Allow localhost
+    if origin.startswith(("http://localhost:", "http://127.0.0.1:")):
+        return True
+    # Allow Vercel preview deployments
+    if origin.startswith("https://restaurant-management-system-") and origin.endswith(".vercel.app"):
+        return True
+    # Allow Render deployment
+    if origin == "https://restaurant-management-system-5c3x.onrender.com":
+        return True
+    return False
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # We'll handle origin validation in the middleware
+    allow_origin_regex=r"https://restaurant-management-system.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["*"],
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+        "X-CSRF-Token",
+        "Access-Control-Allow-Origin",
+        "Access-Control-Allow-Methods",
+        "Access-Control-Allow-Headers",
+    ],
     expose_headers=["*"],
     max_age=3600,
 )

@@ -13,7 +13,7 @@ services:
       - key: DATABASE_URL
         value: sqlite:///backend/database/restaurant.db
       - key: ALLOWED_ORIGINS
-        value: "https://restaurant-management-system-9no85z76x-vinesh-vonterus-projects.vercel.app,http://localhost:5173,http://localhost:3000"
+        value: "https://restaurant-management-system.vercel.app,https://restaurant-management-system-*.vercel.app,http://localhost:5173,http://localhost:3000"
       - key: JWT_SECRET_KEY
         value: "TRYXQMbll9xoTZohCfcf2UGuF62cr5xVTN+ADmb8SXY="
       - key: ENVIRONMENT
@@ -23,13 +23,15 @@ services:
       - key: CORS_ALLOW_METHODS
         value: "GET,POST,PUT,DELETE,PATCH,OPTIONS"
       - key: CORS_ALLOW_HEADERS
-        value: "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+        value: "Content-Type,Authorization,Accept,Origin,X-Requested-With,X-CSRF-Token,Access-Control-Allow-Origin,Access-Control-Allow-Methods,Access-Control-Allow-Headers"
       - key: CORS_EXPOSE_HEADERS
         value: "*"
       - key: CORS_MAX_AGE
         value: "3600"
       - key: MAX_UPLOAD_SIZE
         value: "10485760"  # 10MB in bytes
+      - key: CORS_ALLOW_ORIGIN_REGEX
+        value: "https://restaurant-management-system.*\\.vercel\\.app"
     disk:
       name: data
       mountPath: /opt/render/project/src/static
