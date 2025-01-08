@@ -22,5 +22,12 @@
     }
   ],
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/api/:path*/",
+      "destination": "/api/:path*",
+      "permanent": true
+    }
+  ]
 }

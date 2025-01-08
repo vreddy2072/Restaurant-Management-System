@@ -4,11 +4,12 @@ import axios from 'axios';
 // In development, use the full localhost URL
 const isDevelopment = import.meta.env.VITE_NODE_ENV === 'development';
 const baseURL = isDevelopment ? 'http://localhost:8000' : '';
+const API_PREFIX = import.meta.env.VITE_API_URL || '/api';
 
 console.log('API Service initialized with:', {
   environment: import.meta.env.VITE_NODE_ENV,
   baseURL,
-  apiUrl: import.meta.env.VITE_API_URL
+  apiUrl: API_PREFIX
 });
 
 export const api = axios.create({
@@ -26,7 +27,11 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log(`Making ${config.method?.toUpperCase()} request to: ${config.baseURL}${config.url}`, {
+    // Add API_PREFIX to URL in production
+    if (!isDevelopment && !config.url?.startsWith(API_PREFIX)) {
+      config.url = `${API_PREFIX}${config.url}`;
+    }
+    console.log(`Making ${config.method?.toUpperCase()} request to: ${config.url}`, {
       headers: config.headers,
       params: config.params,
       data: config.data
