@@ -2,10 +2,13 @@ import axios from 'axios';
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-console.log('API Service initialized with baseURL:', baseURL);
+// Remove /api from baseURL if it's already included in VITE_API_URL
+const normalizedBaseURL = baseURL.endsWith('/api') ? baseURL : `${baseURL}`;
+
+console.log('API Service initialized with baseURL:', normalizedBaseURL);
 
 export const api = axios.create({
-  baseURL,
+  baseURL: normalizedBaseURL,
   headers: {
     'Content-Type': 'application/json',
   },
