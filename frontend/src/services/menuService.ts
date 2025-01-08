@@ -168,15 +168,32 @@ class MenuService {
   }
 
   async uploadImage(id: number, file: File): Promise<MenuItem> {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await api.post(`/api/menu/items/${id}/image`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return ensureAbsoluteImageUrl(response.data);
+    console.log(`Uploading image for menu item ${id}`);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await api.post(`/api/menu/items/${id}/image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json'
+        },
+        // Needed for proper FormData handling
+        transformRequest: [(data) => data]
+      });
+      console.log('Upload image response:', response.data);
+      return ensureAbsoluteImageUrl(response.data);
+    } catch (error: any) {
+      console.error('Failed to upload image:', error);
+      if (error.response) {
+        console.error('Error response:', {
+          status: error.response.status,
+          data: error.response.data,
+          headers: error.response.headers
+        });
+      }
+      throw error;
+    }
   }
 
   async getAllergens(): Promise<Allergen[]> {
