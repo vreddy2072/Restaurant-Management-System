@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 import os
 import shutil
 from pathlib import Path
+import logging
 
 from backend.models.schemas.menu import (
     Category, CategoryCreate, CategoryUpdate,
@@ -16,6 +17,10 @@ from backend.services.menu_service import MenuService
 from backend.utils.database import get_db
 
 router = APIRouter(prefix="/api/menu", tags=["menu"])
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Create images directory if it doesn't exist
 IMAGES_DIR = Path("static/images")
@@ -83,7 +88,10 @@ def get_menu_items(
     db: Session = Depends(get_db)
 ):
     """Get all menu items, optionally filtered by category"""
-    return MenuService.get_menu_items(db, skip, limit, category_id, active_only)
+    logger.info(f"Fetching menu items with params: skip={skip}, limit={limit}, category_id={category_id}, active_only={active_only}")
+    items = MenuService.get_menu_items(db, skip, limit, category_id, active_only)
+    logger.info(f"Found {len(items)} menu items")
+    return items
 
 @router.get("/items/filter", response_model=List[MenuItem])
 def filter_menu_items(
@@ -211,8 +219,11 @@ def get_full_menu(
     db: Session = Depends(get_db)
 ):
     """Get the full menu with categories and items"""
+    logger.info(f"Fetching full menu with active_only={active_only}")
     categories = MenuService.get_categories(db, active_only=active_only)
+    logger.info(f"Found {len(categories)} categories")
     menu_items = MenuService.get_menu_items(db, active_only=active_only)
+    logger.info(f"Found {len(menu_items)} menu items")
     
     # Group menu items by category
     menu_by_category = []
@@ -223,6 +234,7 @@ def get_full_menu(
             menu_items=category_items
         ))
     
+    logger.info(f"Returning menu with {len(menu_by_category)} categories")
     return menu_by_category
 
 @router.post("/items/{item_id}/image")
