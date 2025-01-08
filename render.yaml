@@ -11,7 +11,7 @@ services:
       - key: PORT
         value: 10000
       - key: DATABASE_URL
-        value: sqlite:///backend/database/restaurant.db
+        value: sqlite:////opt/render/project/src/static/data/restaurant.db
       - key: ALLOWED_ORIGINS
         value: "https://restaurant-management-system.vercel.app,https://restaurant-management-system-*.vercel.app,http://localhost:5173,http://localhost:3000"
       - key: STATIC_PATH
