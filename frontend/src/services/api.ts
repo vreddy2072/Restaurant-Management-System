@@ -1,14 +1,19 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// In production, use relative path which will be handled by Vercel rewrites
+// In development, use the full localhost URL
+const isDevelopment = import.meta.env.VITE_NODE_ENV === 'development';
+const baseURL = isDevelopment ? 'http://localhost:8000' : '';
+const API_PREFIX = import.meta.env.VITE_API_URL || '/api';
 
-// Remove /api from baseURL if it's already included in VITE_API_URL
-const normalizedBaseURL = baseURL.endsWith('/api') ? baseURL : `${baseURL}`;
-
-console.log('API Service initialized with baseURL:', normalizedBaseURL);
+console.log('API Service initialized with:', {
+  environment: import.meta.env.VITE_NODE_ENV,
+  baseURL,
+  apiUrl: API_PREFIX
+});
 
 export const api = axios.create({
-  baseURL: normalizedBaseURL,
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -22,7 +27,11 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log(`Making ${config.method?.toUpperCase()} request to: ${config.baseURL}${config.url}`, {
+    // Add API_PREFIX to URL in production
+    if (!isDevelopment && !config.url?.startsWith(API_PREFIX)) {
+      config.url = `${API_PREFIX}${config.url}`;
+    }
+    console.log(`Making ${config.method?.toUpperCase()} request to: ${config.url}`, {
       headers: config.headers,
       params: config.params,
       data: config.data
