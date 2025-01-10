@@ -1,7 +1,7 @@
 import React from 'react';
 import { Snackbar, Alert, AlertColor } from '@mui/material';
 
-interface ToastProps {
+export interface ToastProps {
   open: boolean;
   onClose: () => void;
   message: string;

@@ -29,7 +29,7 @@ function NavBar() {
     <AppBar position="static" sx={{ minHeight: 56 }}>
       <Toolbar variant="dense" sx={{ minHeight: 56 }}>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          Global Fusion Restaurant
+          XYZ Restaurant
         </Typography>
         {isAuthenticated ? (
           <>

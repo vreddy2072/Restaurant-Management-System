@@ -9,6 +9,7 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
+        "generate-html": "mkdir -p dist && cp index.html dist/",
         "start": "vite preview --port $PORT",
         "preview": "vite preview",
         "lint": "eslint .",
@@ -16,7 +17,8 @@
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
         "cypress:open": "cypress open",
-        "cypress:run": "cypress run"
+        "cypress:run": "cypress run",
+        "install-deps": "npm install --legacy-peer-deps"
     },
     "dependencies": {
         "@emotion/react": "^11.14.0",

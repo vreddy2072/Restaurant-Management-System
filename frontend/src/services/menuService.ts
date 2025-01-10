@@ -20,47 +20,76 @@ class MenuService {
     if (categoryId) params.append('category_id', categoryId.toString());
     if (activeOnly) params.append('active_only', 'true');
     
-    console.log('Making API call to get menu items with params:', params.toString());
-    const response = await api.get(`/api/menu/items/`, { params });
-    console.log('API response for menu items:', response.data);
-    return response.data.map(ensureAbsoluteImageUrl);
+    console.log('Fetching menu items with params:', params.toString());
+    try {
+      const response = await api.get('/api/menu/items', { params });
+      console.log('Menu items response:', response.data);
+      return response.data.map(ensureAbsoluteImageUrl);
+    } catch (error) {
+      console.error('Failed to fetch menu items:', error);
+      throw error;
+    }
   }
 
   async getMenuItem(id: number): Promise<MenuItem> {
-    const response = await api.get(`/api/menu/items/${id}`);
-    return ensureAbsoluteImageUrl(response.data);
+    console.log(`Fetching menu item with ID: ${id}`);
+    try {
+      const response = await api.get(`/api/menu/items/${id}`);
+      console.log('Menu item response:', response.data);
+      return ensureAbsoluteImageUrl(response.data);
+    } catch (error) {
+      console.error(`Failed to fetch menu item ${id}:`, error);
+      throw error;
+    }
   }
 
   async createMenuItem(data: MenuItemCreate): Promise<MenuItem> {
     console.log('Creating menu item with data:', data);
-    const response = await api.post('/api/menu/items/', data);
-    console.log('Create response:', response.data);
-    return response.data;
+    try {
+      const response = await api.post('/api/menu/items', data);
+      console.log('Create menu item response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to create menu item:', error);
+      throw error;
+    }
   }
 
   async updateMenuItem(id: number, data: MenuItemUpdate): Promise<MenuItem> {
-    console.log('updateMenuItem - Request URL:', `/api/menu/items/${id}`);
-    console.log('updateMenuItem - Request data:', JSON.stringify(data, null, 2));
-    
+    console.log(`Updating menu item ${id} with data:`, data);
     try {
-      const response = await api.patch(`/api/menu/items/${id}/`, data);
-      console.log('updateMenuItem - Response:', response.data);
+      const response = await api.patch(`/api/menu/items/${id}`, data);
+      console.log('Update menu item response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('updateMenuItem - Error:', error);
+      console.error(`Failed to update menu item ${id}:`, error);
       throw error;
     }
   }
 
   async deleteMenuItem(id: number): Promise<void> {
-    await api.delete(`/api/menu/items/${id}`);
+    console.log(`Deleting menu item ${id}`);
+    try {
+      await api.delete(`/api/menu/items/${id}`);
+      console.log(`Menu item ${id} deleted successfully`);
+    } catch (error) {
+      console.error(`Failed to delete menu item ${id}:`, error);
+      throw error;
+    }
   }
 
   async getCategories(activeOnly: boolean = true): Promise<Category[]> {
     const params = new URLSearchParams();
     if (activeOnly) params.append('active_only', 'true');
-    const response = await api.get(`/api/menu/categories`, { params });
-    return response.data;
+    console.log('Fetching categories with params:', params.toString());
+    try {
+      const response = await api.get('/api/menu/categories', { params });
+      console.log('Categories response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      throw error;
+    }
   }
 
   async getCategory(id: number): Promise<Category> {
@@ -69,7 +98,7 @@ class MenuService {
   }
 
   async createCategory(data: CategoryCreate): Promise<Category> {
-    const response = await api.post(`/api/menu/categories`, data);
+    const response = await api.post('/api/menu/categories', data);
     return response.data;
   }
 
@@ -96,9 +125,14 @@ class MenuService {
 
   async getAllergens(): Promise<Allergen[]> {
     console.log('Fetching allergens...');
-    const response = await api.get(`/api/menu/allergens`);
-    console.log('Allergens response:', response.data);
-    return response.data;
+    try {
+      const response = await api.get('/api/menu/allergens');
+      console.log('Allergens response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch allergens:', error);
+      throw error;
+    }
   }
 }
 

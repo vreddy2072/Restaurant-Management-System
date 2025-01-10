@@ -9,15 +9,22 @@ const mockMenuItem: MenuItem = {
   description: 'Test Description',
   price: 9.99,
   category_id: 1,
-  category: { id: 1, name: 'Test Category' },
+  category: 'Test Category',
   is_vegetarian: true,
   is_vegan: false,
   is_gluten_free: false,
   is_available: true,
+  is_active: true,
   spice_level: 2,
   preparation_time: 15,
   allergens: [],
   image_url: 'test.jpg',
+  average_rating: 4.5,
+  rating_count: 10,
+  customization_options: {
+    'Size': ['Small', 'Medium', 'Large'],
+    'Crust': ['Thin', 'Regular', 'Thick']
+  },
   created_at: '2024-01-01',
   updated_at: '2024-01-01'
 };

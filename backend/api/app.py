@@ -37,14 +37,19 @@ app = FastAPI(
 )
 
 # Configure CORS with more explicit settings
-origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+origins = [
+    "http://localhost:5173",  # Local development
+    "http://localhost:3000",  # Local production build
+    "https://restaurant-management-system-j708nvl5l-vinesh-vonterus-projects.vercel.app",  # Vercel deployment
+    "https://restaurant-management-system-5c3x.onrender.com"  # Render deployment
+]
 logger.debug(f"Configured CORS origins: {origins}")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
     max_age=3600,
