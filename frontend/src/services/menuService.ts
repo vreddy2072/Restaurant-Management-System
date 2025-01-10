@@ -58,11 +58,23 @@ class MenuService {
   async updateMenuItem(id: number, data: MenuItemUpdate): Promise<MenuItem> {
     console.log(`Updating menu item ${id} with data:`, data);
     try {
-      const response = await api.patch(`/api/menu/items/${id}`, data);
+      const response = await api.patch(`/api/menu/items/${id}`, data, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
       console.log('Update menu item response:', response.data);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to update menu item ${id}:`, error);
+      if (error.response) {
+        console.error('Error response:', {
+          status: error.response.status,
+          data: error.response.data,
+          headers: error.response.headers
+        });
+      }
       throw error;
     }
   }
@@ -70,10 +82,21 @@ class MenuService {
   async deleteMenuItem(id: number): Promise<void> {
     console.log(`Deleting menu item ${id}`);
     try {
-      await api.delete(`/api/menu/items/${id}`);
+      await api.delete(`/api/menu/items/${id}`, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
       console.log(`Menu item ${id} deleted successfully`);
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to delete menu item ${id}:`, error);
+      if (error.response) {
+        console.error('Error response:', {
+          status: error.response.status,
+          data: error.response.data,
+          headers: error.response.headers
+        });
+      }
       throw error;
     }
   }
@@ -103,12 +126,45 @@ class MenuService {
   }
 
   async updateCategory(id: number, data: CategoryUpdate): Promise<Category> {
-    const response = await api.patch(`/api/menu/categories/${id}`, data);
-    return response.data;
+    try {
+      const response = await api.patch(`/api/menu/categories/${id}`, data, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error(`Failed to update category ${id}:`, error);
+      if (error.response) {
+        console.error('Error response:', {
+          status: error.response.status,
+          data: error.response.data,
+          headers: error.response.headers
+        });
+      }
+      throw error;
+    }
   }
 
   async deleteCategory(id: number): Promise<void> {
-    await api.delete(`/api/menu/categories/${id}`);
+    try {
+      await api.delete(`/api/menu/categories/${id}`, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+    } catch (error: any) {
+      console.error(`Failed to delete category ${id}:`, error);
+      if (error.response) {
+        console.error('Error response:', {
+          status: error.response.status,
+          data: error.response.data,
+          headers: error.response.headers
+        });
+      }
+      throw error;
+    }
   }
 
   async uploadImage(id: number, file: File): Promise<MenuItem> {
