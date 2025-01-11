@@ -1,0 +1,29 @@
+Create a web application with the following features:
+
+1. User Authentication
+   - Login page with email and password
+   - Registration page for new users
+   - User profile page showing user details
+   - Secure password hashing and JWT token-based authentication
+
+2. Task Management
+   - Dashboard showing user's tasks
+   - Create new task with title, description, due date, and priority
+   - Edit existing tasks
+   - Delete tasks
+   - Mark tasks as complete/incomplete
+   - Filter tasks by status and priority
+
+3. User Settings
+   - Update profile information
+   - Change password
+   - Email notification preferences
+   - Theme preferences (light/dark mode)
+
+Technical Requirements:
+- Modern, responsive UI using React, Vite and Tailwind CSS
+- RESTful API using FastAPI
+- SQLite database with SQLAlchemy ORM
+- Secure authentication using JWT tokens
+- Form validation using Pydantic
+- Real-time updates for task status changes 
