@@ -287,8 +287,18 @@ export const MenuItemList: React.FC = () => {
               variant="outlined"
               startIcon={<FilterSettingsIcon />}
               onClick={() => setFilterDrawerOpen(true)}
+              size="medium"
             >
               Filters
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAddItem}
+              size="medium"
+              color="primary"
+            >
+              Add Item
             </Button>
             {renderViewToggle()}
           </Box>
@@ -468,6 +478,15 @@ export const MenuItemList: React.FC = () => {
             >
               Filters
             </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAddItem}
+              size="medium"
+              color="primary"
+            >
+              Add Item
+            </Button>
           </Box>
           {activeFilters.dietary.length > 0 && (
             <Stack direction="row" spacing={1}>
@@ -529,19 +548,6 @@ export const MenuItemList: React.FC = () => {
           </>
         )}
       </Box>
-
-      <Fab
-        color="primary"
-        aria-label="add"
-        onClick={handleAddItem}
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-        }}
-      >
-        <AddIcon />
-      </Fab>
 
       <MenuItemDialog
         open={dialogOpen}

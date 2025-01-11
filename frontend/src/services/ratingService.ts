@@ -1,4 +1,5 @@
 import { api } from './api';
+import { API_ROUTES } from '../constants/api';
 
 export interface MenuItemRating {
   id: number;
@@ -24,7 +25,7 @@ export interface CreateMenuItemRating {
 class RatingService {
   async createOrUpdateRating(menuItemId: number, rating: number, comment?: string): Promise<MenuItemRating> {
     try {
-      const response = await api.post(`/api/ratings/menu-items/${menuItemId}`, {
+      const response = await api.post(API_ROUTES.ratings.menuItems.create(menuItemId), {
         menu_item_id: menuItemId,
         rating,
         comment: comment || null
@@ -38,7 +39,7 @@ class RatingService {
 
   async getMenuItemRatings(menuItemId: number): Promise<MenuItemRating[]> {
     try {
-      const response = await api.get(`/api/ratings/menu-items/${menuItemId}`);
+      const response = await api.get(`${API_ROUTES.ratings.menuItems.base}/${menuItemId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching ratings:', error);
@@ -48,7 +49,7 @@ class RatingService {
 
   async getUserRating(menuItemId: number): Promise<MenuItemRating | null> {
     try {
-      const response = await api.get(`/api/ratings/menu-items/${menuItemId}/user`);
+      const response = await api.get(API_ROUTES.ratings.menuItems.user(menuItemId));
       return response.data;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -61,7 +62,7 @@ class RatingService {
 
   async deleteRating(menuItemId: number): Promise<void> {
     try {
-      await api.delete(`/api/ratings/menu-items/${menuItemId}`);
+      await api.delete(`${API_ROUTES.ratings.menuItems.base}/${menuItemId}`);
     } catch (error) {
       console.error('Error deleting rating:', error);
       throw error;
@@ -70,7 +71,7 @@ class RatingService {
 
   async getAverageRating(menuItemId: number): Promise<RatingAverage> {
     try {
-      const response = await api.get(`/api/ratings/menu-items/${menuItemId}/average`);
+      const response = await api.get(API_ROUTES.ratings.menuItems.average(menuItemId));
       return response.data;
     } catch (error) {
       console.error('Error fetching average rating:', error);

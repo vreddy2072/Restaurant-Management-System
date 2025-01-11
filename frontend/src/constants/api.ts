@@ -11,6 +11,21 @@ export const API_ROUTES = {
   menu: {
     categories: '/api/menu/categories',
     items: '/api/menu/items',
+    allergens: '/api/menu/allergens',
+  },
+  ratings: {
+    menuItems: {
+      base: '/api/ratings/menu-items',
+      create: (itemId: number) => `/api/ratings/menu-items/${itemId}`,
+      user: (itemId: number) => `/api/ratings/menu-items/${itemId}/user`,
+      average: (itemId: number) => `/api/ratings/menu-items/${itemId}/average`,
+    },
+    restaurant: {
+      base: '/api/ratings/restaurant-feedback',
+      stats: '/api/ratings/restaurant-feedback/stats',
+      recent: '/api/ratings/restaurant-feedback/recent',
+      user: '/api/ratings/restaurant-feedback/user',
+    },
   },
 } as const;
 

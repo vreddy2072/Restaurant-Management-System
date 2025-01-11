@@ -1,8 +1,9 @@
 import { rest } from 'msw';
+import { API_URL, API_ROUTES } from '../constants/api';
 
 export const handlers = [
   // Categories
-  rest.get('http://localhost:8000/menu/categories/', (_, res, ctx) => {
+  rest.get(`${API_URL}${API_ROUTES.menu.categories}`, (_, res, ctx) => {
     return res(
       ctx.status(200),
       ctx.json([
@@ -21,7 +22,7 @@ export const handlers = [
   }),
 
   // Menu Items
-  rest.get('http://localhost:8000/menu/items/', (_, res, ctx) => {
+  rest.get(`${API_URL}${API_ROUTES.menu.items}`, (_, res, ctx) => {
     return res(
       ctx.status(200),
       ctx.json([
@@ -37,7 +38,7 @@ export const handlers = [
     );
   }),
 
-  rest.post('http://localhost:8000/menu/items/', (req, res, ctx) => {
+  rest.post(`${API_URL}${API_ROUTES.menu.items}`, (req, res, ctx) => {
     return res(
       ctx.status(201),
       ctx.json({
@@ -47,7 +48,7 @@ export const handlers = [
     );
   }),
 
-  rest.put('http://localhost:8000/menu/items/:id', (req, res, ctx) => {
+  rest.put(`${API_URL}${API_ROUTES.menu.items}/:id`, (req, res, ctx) => {
     return res(
       ctx.status(200),
       ctx.json({
@@ -57,7 +58,7 @@ export const handlers = [
     );
   }),
 
-  rest.delete('http://localhost:8000/menu/items/:id', (_, res, ctx) => {
+  rest.delete(`${API_URL}${API_ROUTES.menu.items}/:id`, (_, res, ctx) => {
     return res(ctx.status(204));
   }),
 ]; 

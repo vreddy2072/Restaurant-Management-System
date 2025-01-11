@@ -29,11 +29,11 @@ function NavBar() {
     <AppBar position="static" sx={{ minHeight: 56 }}>
       <Toolbar variant="dense" sx={{ minHeight: 56 }}>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          XYZ Restaurant
+          Restaurant
         </Typography>
         {isAuthenticated ? (
           <>
-            <Button color="inherit" component={Link} to="/" size="small">
+            <Button color="inherit" component={Link} to="/menu" size="small">
               Menu
             </Button>
 
@@ -61,7 +61,7 @@ function NavBar() {
               Feedback
             </Button>
             <Button color="inherit" component={Link} to="/admin/menu" size="small">
-              Manage Menu
+              Admin
             </Button>            
             <Button color="inherit" onClick={handleLogout} size="small">
               Logout
@@ -108,7 +108,8 @@ function App() {
                 }}
               >
                 <Routes>
-                  <Route path="/" element={<Menu />} />
+                  <Route path="/" element={<LoginForm />} />
+                  <Route path="/menu" element={<Menu />} />
                   <Route path="/register" element={<RegisterForm />} />
                   <Route path="/login" element={<LoginForm />} />
                   <Route path="/cart" element={<Cart />} />
