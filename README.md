@@ -1,9 +1,9 @@
-# Restaurant-Management-System
-Application to setup and manage Restaurants
+# Restaurant-Ordering-System
+Application for customers to order from restaurants
 
 # Restaurant Application
 
-A full-stack restaurant management application with FastAPI backend and React frontend.
+A full-stack restaurant ordering application with FastAPI backend and React frontend.
 
 ## Setup Files
 
