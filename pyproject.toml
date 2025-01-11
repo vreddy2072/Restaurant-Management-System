@@ -3,7 +3,7 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "restaurant-management-system"
+name = "restaurant-ordering-system"
 version = "0.1.0"
 description = "Restaurant Application"
 authors = [
@@ -21,6 +21,7 @@ dependencies = [
     "python-multipart>=0.0.6",
     "email-validator>=2.1.0.post1",
     "alembic>=1.12.1",
+    "bcrypt>=4.0.1",
 ]
 
 [project.optional-dependencies]

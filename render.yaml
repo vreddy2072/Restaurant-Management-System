@@ -13,7 +13,7 @@ services:
       - key: DATABASE_URL
         value: sqlite:////opt/render/project/src/static/data/restaurant.db
       - key: ALLOWED_ORIGINS
-        value: "https://restaurant-management-system.vercel.app,https://restaurant-management-system-*.vercel.app,http://localhost:5173,http://localhost:3000"
+        value: "https://restaurant-ordering-system.vercel.app,https://restaurant-ordering-system-*.vercel.app,http://localhost:5173,http://localhost:3000"
       - key: STATIC_PATH
         value: "/opt/render/project/src/static"
       - key: JWT_SECRET_KEY
@@ -33,7 +33,7 @@ services:
       - key: MAX_UPLOAD_SIZE
         value: "10485760"  # 10MB in bytes
       - key: CORS_ALLOW_ORIGIN_REGEX
-        value: "https://restaurant-management-system.*\\.vercel\\.app"
+        value: "https://restaurant-ordering-system.*\\.vercel\\.app"
     disk:
       name: data
       mountPath: /opt/render/project/src/static

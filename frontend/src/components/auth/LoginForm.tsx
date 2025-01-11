@@ -29,7 +29,7 @@ export default function LoginForm() {
       setError('');
       setLoading(true);
       await login({ email, password });
-      navigate('/');
+      navigate('/menu');
     } catch (err) {
       setError('Failed to sign in');
       console.error('Login error:', err);
@@ -43,7 +43,7 @@ export default function LoginForm() {
       setError('');
       setLoading(true);
       await guestLogin();
-      navigate('/');
+      navigate('/menu');
     } catch (err) {
       setError('Failed to sign in as guest');
       console.error('Guest login error:', err);

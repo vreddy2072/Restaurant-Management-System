@@ -122,7 +122,7 @@ const RatingComponent: React.FC<RatingComponentProps> = ({
             onChangeActive={(_, newHover) => !readOnly && setHover(newHover)}
             emptyIcon={<StarIcon style={{ opacity: 0.55 }} fontSize="inherit" />}
           />
-          <Typography variant="body2" color="text.secondary">
+          <Typography component="span" variant="body2" color="text.secondary">
             {`${averageRating.average.toFixed(1)} (${averageRating.total} ${
               averageRating.total === 1 ? 'rating' : 'ratings'
             })`}

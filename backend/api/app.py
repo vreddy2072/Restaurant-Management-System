@@ -29,7 +29,7 @@ load_dotenv()
 # Initialize FastAPI app
 app = FastAPI(
     title="Restaurant Application API",
-    description="API for Restaurant Management System",
+    description="API for Restaurant Ordering System",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -40,9 +40,9 @@ app = FastAPI(
 origins = [
     "http://localhost:5173",  # Local development
     "http://localhost:3000",  # Local production build
-    "https://restaurant-management-system-*.vercel.app",  # Vercel preview deployments
-    "https://restaurant-management-system.vercel.app",  # Vercel production
-    "https://restaurant-management-system-5c3x.onrender.com"  # Render deployment
+    "https://restaurant-ordering-system-*.vercel.app",  # Vercel preview deployments
+    "https://restaurant-ordering-system.vercel.app",  # Vercel production
+    "https://restaurant-ordering-system-5c3x.onrender.com"  # Render deployment
 ]
 
 # Log the configured origins
@@ -56,17 +56,17 @@ def validate_origin(origin: str) -> bool:
     if origin.startswith(("http://localhost:", "http://127.0.0.1:")):
         return True
     # Allow Vercel preview deployments
-    if origin.startswith("https://restaurant-management-system-") and origin.endswith(".vercel.app"):
+    if origin.startswith("https://restaurant-ordering-system-") and origin.endswith(".vercel.app"):
         return True
     # Allow Render deployment
-    if origin == "https://restaurant-management-system-5c3x.onrender.com":
+    if origin == "https://restaurant-ordering-system-5c3x.onrender.com":
         return True
     return False
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # We'll handle origin validation in the middleware
-    allow_origin_regex=r"https://restaurant-management-system.*\.vercel\.app",
+    allow_origin_regex=r"https://restaurant-ordering-system.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=[
