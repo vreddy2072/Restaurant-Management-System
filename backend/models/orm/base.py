@@ -1,4 +1,3 @@
-from backend.utils.database import Base
+from sqlalchemy.ext.declarative import declarative_base
 
-# Note: We're using the Base instance from database.py
-# DO NOT create a new Base instance here to avoid circular imports 
+Base = declarative_base() 

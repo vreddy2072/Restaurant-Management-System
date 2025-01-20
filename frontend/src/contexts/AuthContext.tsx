@@ -3,6 +3,7 @@ import authService from '../services/authService';
 import { UserResponse, UserCreate, UserLogin, AuthResponse } from '../types/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 interface AuthContextType {
   user: UserResponse | null;
@@ -83,7 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (response?.access_token) {
         setUser(response.user);
         authService.setAuthToken(response.access_token);
-        navigate('/');
+        localStorage.setItem('token', response.access_token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${response.access_token}`;
       }
     } catch (error) {
       console.error('Guest login error:', error);
@@ -93,9 +95,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    authService.logout();
+  const logout = async () => {
+    await authService.logout();
     setUser(null);
+    // Clear any stored tokens
+    localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
+    return Promise.resolve();
   };
 
   const value = {

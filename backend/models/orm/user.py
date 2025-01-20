@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 import re
 
 from backend.utils.database import Base
@@ -8,24 +9,25 @@ from backend.utils.database import Base
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True)
-    username = Column(String(50), unique=True, nullable=False, index=True)
-    email = Column(String(100), unique=True, nullable=False, index=True)
-    password_hash = Column(String(255), nullable=False)
-    first_name = Column(String(50), nullable=False)
-    last_name = Column(String(50), nullable=False)
-    role = Column(String(20), nullable=False)
-    is_active = Column(Boolean, nullable=False, default=True)
-    is_guest = Column(Boolean, nullable=False, default=False)
-    is_admin = Column(Boolean, nullable=False, default=False)
-    phone_number = Column(String(20), nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
+    role = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True)
+    is_guest = Column(Boolean, default=False)
+    is_admin = Column(Boolean, default=False)
+    phone_number = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    # Use string references to avoid circular imports
-    shopping_cart = relationship("ShoppingCart", back_populates="user", uselist=False)
-    menu_item_ratings = relationship("MenuItemRating", back_populates="user")
-    restaurant_feedback = relationship("RestaurantFeedback", back_populates="user")
+    # Relationships
+    shopping_carts = relationship("ShoppingCart", back_populates="user", cascade="all, delete-orphan")
+    orders = relationship("Order", back_populates="user", cascade="all, delete-orphan")
+    menu_item_ratings = relationship("MenuItemRating", back_populates="user", cascade="all, delete-orphan")
+    restaurant_feedback = relationship("RestaurantFeedback", back_populates="user", cascade="all, delete-orphan")
 
     VALID_ROLES = ["admin", "staff", "customer"]
     EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")

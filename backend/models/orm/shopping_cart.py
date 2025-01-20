@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, ForeignKey, DateTime, JSON, func
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON, func
 from sqlalchemy.orm import relationship
 
 from backend.utils.database import Base
@@ -7,14 +7,15 @@ from backend.utils.database import Base
 class ShoppingCart(Base):
     __tablename__ = "shopping_carts"
 
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True, index=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    order_number = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
-    user = relationship("User", back_populates="shopping_cart")
-    items = relationship("CartItem", back_populates="cart", cascade="all, delete-orphan")
+    user = relationship("User", back_populates="shopping_carts")
+    cart_items = relationship("CartItem", back_populates="cart", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<ShoppingCart user_id={self.user_id}>"
@@ -24,7 +25,8 @@ class ShoppingCart(Base):
         return {
             "id": self.id,
             "user_id": self.user_id,
-            "items": [item.to_dict() for item in self.items],
+            "order_number": self.order_number,
+            "items": [item.to_dict() for item in self.cart_items],
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
@@ -41,7 +43,7 @@ class CartItem(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
-    cart = relationship("ShoppingCart", back_populates="items")
+    cart = relationship("ShoppingCart", back_populates="cart_items")
     menu_item = relationship("MenuItem")
 
     def __repr__(self):

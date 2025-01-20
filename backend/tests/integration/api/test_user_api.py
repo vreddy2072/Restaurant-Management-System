@@ -139,7 +139,7 @@ def test_deactivate_user(client: TestClient, db_session: Session):
     # Try to access account after deactivation
     response = client.get("/api/users/me", headers=headers)
     assert response.status_code == 401
-    assert "Not authenticated or user is deactivated" in response.json()["detail"]
+    assert response.json()["detail"] == "Not authenticated or user is deactivated"
 
 def test_guest_login(client: TestClient, db_session: Session):
     """Test guest user login functionality"""
@@ -206,4 +206,4 @@ def test_guest_user_deactivation(client: TestClient, db_session: Session):
     # Try to access protected route with deactivated account
     me_response = client.get("/api/users/me", headers=headers)
     assert me_response.status_code == 401
-    assert "Not authenticated or user is deactivated" in me_response.json()["detail"]
+    assert me_response.json()["detail"] == "Not authenticated or user is deactivated"

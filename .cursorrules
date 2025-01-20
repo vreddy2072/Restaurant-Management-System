@@ -103,10 +103,37 @@
         }
     },
     "scripts": {
-        "test:all": "npm run test:unit && npm run test:integration && npm run test:visual",
+        "test:all": "npm run test:unit; npm run test:integration; npm run test:visual",
         "test:unit": "jest",
         "test:integration": "cypress run",
         "test:visual": "chromatic",
         "dev": "npm run storybook"
+    },
+    "project_guidelines": {
+        "frontend": {
+            "framework": "React",
+            "styling": "Tailwind CSS",
+            "language": "TypeScript",
+            "state_management": "React Context or Redux",
+            "design_rules": [
+                "UI should have a modern look.",
+                "Screens should not have a scrollbar for forms unless there are list of items. Eliminate or reduce padding to remove scrollbar",
+                "Screens should have a scrollbar only for lists where items might exceed screen size.",
+                "UI pages should use APIs available in the Swagger documentation at http://localhost:8000/docs#/"
+            ]
+        },
+        "backend": {
+            "layers": ["API", "Service", "ORM", "Database"],
+            "guidelines": [
+                "Encapsulate business logic in the Service layer.",
+                "Use ORM for database interactions.",
+                "Follow RESTful API conventions."
+            ]
+        },
+        "testing": {
+            "unit": "Write unit tests for components and services.",
+            "integration": "Test interactions between layers.",
+            "end_to_end": "Verify the application from a user perspective."
+        }
     }
-} 
+}

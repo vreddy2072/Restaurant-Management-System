@@ -27,8 +27,10 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
       setLoading(true);
       await updateCartItem(item.id, {
         quantity: newQuantity,
-        customization_choices: item.customization_choices,
+        customization_choices: item.customizations,
       });
+    } catch (error) {
+      console.error('Failed to update quantity:', error);
     } finally {
       setLoading(false);
     }
@@ -38,13 +40,15 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
     try {
       setLoading(true);
       await removeFromCart(item.id);
+    } catch (error) {
+      console.error('Failed to remove item:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // If menu_item is missing, show a fallback UI
-  if (!item.menu_item) {
+  // If menu_item is missing or data is invalid, show a fallback UI
+  if (!item || !item.menu_item || !item.menu_item.name) {
     return (
       <Card sx={{ mb: 2, position: 'relative' }}>
         <CardContent>
@@ -65,6 +69,9 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
     );
   }
 
+  const unitPrice = item.menu_item.price;
+  const subtotal = unitPrice * item.quantity;
+
   return (
     <Card sx={{ mb: 1, position: 'relative' }}>
       <Box display="flex">
@@ -82,7 +89,7 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
               {item.menu_item.name}
             </Typography>
             <Typography variant="subtitle2" color="primary">
-              ${(item.menu_item.price || 0).toFixed(2)}
+              ${unitPrice.toFixed(2)}
             </Typography>
           </Box>
 
@@ -90,9 +97,9 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
             {item.menu_item.description}
           </Typography>
 
-          {item.customization_choices && Object.entries(item.customization_choices).length > 0 && (
+          {item.customizations && Object.entries(item.customizations).length > 0 && (
             <Box sx={{ mb: 1 }}>
-              {Object.entries(item.customization_choices).map(([key, value]) => (
+              {Object.entries(item.customizations).map(([key, value]) => (
                 <Chip
                   key={key}
                   label={`${key}: ${value}`}
@@ -103,45 +110,40 @@ const CartItem: React.FC<CartItemProps> = ({ item }) => {
             </Box>
           )}
 
-          <Box display="flex" alignItems="center">
-            <IconButton
-              size="small"
-              onClick={() => handleQuantityChange(item.quantity - 1)}
-              disabled={loading || item.quantity <= 1}
-            >
-              <RemoveIcon fontSize="small" />
-            </IconButton>
-            <TextField
-              size="small"
-              value={item.quantity}
-              InputProps={{ 
-                readOnly: true,
-                sx: { '& input': { py: 0.5, px: 0, textAlign: 'center' } }
-              }}
-              sx={{ width: 40, mx: 1 }}
-            />
-            <IconButton
-              size="small"
-              onClick={() => handleQuantityChange(item.quantity + 1)}
-              disabled={loading}
-            >
-              <AddIcon fontSize="small" />
-            </IconButton>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Box display="flex" alignItems="center">
+              <IconButton
+                size="small"
+                onClick={() => handleQuantityChange(item.quantity - 1)}
+                disabled={loading || item.quantity <= 1}
+              >
+                <RemoveIcon />
+              </IconButton>
+              <Typography sx={{ mx: 1, minWidth: '20px', textAlign: 'center' }}>
+                {item.quantity}
+              </Typography>
+              <IconButton
+                size="small"
+                onClick={() => handleQuantityChange(item.quantity + 1)}
+                disabled={loading}
+              >
+                <AddIcon />
+              </IconButton>
+            </Box>
 
-            <Box flex={1} />
-
-            <Typography variant="subtitle2" sx={{ mx: 2 }}>
-              ${(item.quantity * (item.menu_item.price || 0)).toFixed(2)}
-            </Typography>
-
-            <IconButton
-              size="small"
-              color="error"
-              onClick={handleRemove}
-              disabled={loading}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
+            <Box display="flex" alignItems="center">
+              <Typography variant="subtitle2" color="text.secondary" sx={{ mr: 2 }}>
+                Subtotal: ${subtotal.toFixed(2)}
+              </Typography>
+              <IconButton
+                color="error"
+                onClick={handleRemove}
+                disabled={loading}
+                size="small"
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Box>
           </Box>
         </CardContent>
       </Box>

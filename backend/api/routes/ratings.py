@@ -12,7 +12,7 @@ from backend.models.schemas.rating import (
 )
 from backend.models.schemas.user import UserResponse
 
-router = APIRouter(prefix="/api/ratings", tags=["ratings"])
+router = APIRouter(prefix="/ratings", tags=["ratings"])
 
 @router.post("/menu-items/{menu_item_id}", response_model=MenuItemRatingResponse)
 def rate_menu_item(

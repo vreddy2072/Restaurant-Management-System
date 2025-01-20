@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Cart, CartItem, AddToCartRequest, UpdateCartItemRequest } from '../types/cart';
 import { cartService } from '../services/cartService';
-import { menuService } from '../services/menuService';
 import { useSnackbar } from '../contexts/SnackbarContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -23,66 +22,63 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showSnackbar } = useSnackbar();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, guestLogin } = useAuth();
 
   const refreshCart = useCallback(async () => {
-    if (!isAuthenticated) {
-      setCart(null);
-      return;
-    }
-    
     try {
       setLoading(true);
-      const cartData = await cartService.getCart();
-      
-      // Fetch menu items for each cart item
-      const menuItems = await menuService.getMenuItems();
-      const menuItemsMap = new Map(menuItems.map(item => [item.id, item]));
-      
-      // Merge menu item data into cart items
-      const updatedCart = {
-        ...cartData,
-        items: cartData.items.map(item => {
-          const menuItem = menuItemsMap.get(item.menu_item_id);
-          const unit_price = menuItem?.price || 0;
-          return {
-            ...item,
-            unit_price,
-            subtotal: unit_price * item.quantity,
-            menu_item: {
-              name: menuItem?.name || 'Unknown Item',
-              description: menuItem?.description || '',
-              image_url: menuItem?.image_url,
-              customization_options: menuItem?.customization_options,
-              price: unit_price
-            }
-          };
-        })
-      };
-      
-      // Calculate total
-      const total = updatedCart.items.reduce((sum, item) => sum + item.subtotal, 0);
-      updatedCart.total = total;
-      
-      setCart(updatedCart);
       setError(null);
-    } catch (err) {
-      setError('Failed to fetch cart');
-      showSnackbar('Failed to fetch cart', 'error');
+
+      // If not authenticated, try guest login first
+      if (!isAuthenticated) {
+        await guestLogin();
+      }
+
+      console.log('Refreshing cart...');
+      const cartData = await cartService.getCart();
+      console.log('Cart refreshed:', cartData);
+      
+      if (cartData && cartData.cart_items) {
+        setCart(cartData);
+      } else {
+        console.error('Invalid cart data received:', cartData);
+        setError('Failed to load cart data');
+      }
+    } catch (err: any) {
+      console.error('Error refreshing cart:', err);
+      const errorMessage = err.response?.data?.detail || 'Failed to fetch cart';
+      setError(errorMessage);
+      showSnackbar(errorMessage, 'error');
     } finally {
       setLoading(false);
     }
-  }, [showSnackbar, isAuthenticated]);
+  }, [isAuthenticated, showSnackbar, guestLogin]);
 
   const addToCart = async (data: AddToCartRequest) => {
     try {
       setLoading(true);
+      setError(null);
+
+      // If not authenticated, try guest login first
+      if (!isAuthenticated) {
+        await guestLogin();
+      }
+
+      console.log('Adding item to cart:', data);
       const updatedCart = await cartService.addItem(data);
-      await refreshCart(); // Refresh to get complete menu item data
-      showSnackbar('Item added to cart', 'success');
-    } catch (err) {
-      setError('Failed to add item to cart');
-      showSnackbar('Failed to add item to cart', 'error');
+      console.log('Cart updated after adding item:', updatedCart);
+      
+      if (updatedCart && updatedCart.cart_items) {
+        setCart(updatedCart);
+        showSnackbar('Item added to cart', 'success');
+      } else {
+        throw new Error('Invalid cart data received');
+      }
+    } catch (err: any) {
+      console.error('Error adding to cart:', err);
+      const errorMessage = err.response?.data?.detail || 'Failed to add item to cart';
+      setError(errorMessage);
+      showSnackbar(errorMessage, 'error');
       throw err;
     } finally {
       setLoading(false);
@@ -92,12 +88,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateCartItem = async (itemId: number, data: UpdateCartItemRequest) => {
     try {
       setLoading(true);
+      setError(null);
+
+      // If not authenticated, try guest login first
+      if (!isAuthenticated) {
+        await guestLogin();
+      }
+
+      console.log('Updating cart item:', itemId, data);
       const updatedCart = await cartService.updateItem(itemId, data);
-      await refreshCart(); // Refresh to get complete menu item data
-      showSnackbar('Cart updated', 'success');
-    } catch (err) {
-      setError('Failed to update cart');
-      showSnackbar('Failed to update cart', 'error');
+      console.log('Cart updated after updating item:', updatedCart);
+      
+      if (updatedCart && updatedCart.cart_items) {
+        setCart(updatedCart);
+        showSnackbar('Cart updated', 'success');
+      } else {
+        throw new Error('Invalid cart data received');
+      }
+    } catch (err: any) {
+      console.error('Error updating cart:', err);
+      const errorMessage = err.response?.data?.detail || 'Failed to update cart';
+      setError(errorMessage);
+      showSnackbar(errorMessage, 'error');
       throw err;
     } finally {
       setLoading(false);
@@ -107,12 +119,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const removeFromCart = async (itemId: number) => {
     try {
       setLoading(true);
+      setError(null);
+
+      // If not authenticated, try guest login first
+      if (!isAuthenticated) {
+        await guestLogin();
+      }
+
+      console.log('Removing item from cart:', itemId);
       const updatedCart = await cartService.removeItem(itemId);
-      await refreshCart(); // Refresh to get complete menu item data
-      showSnackbar('Item removed from cart', 'success');
-    } catch (err) {
-      setError('Failed to remove item from cart');
-      showSnackbar('Failed to remove item from cart', 'error');
+      console.log('Cart updated after removing item:', updatedCart);
+      
+      if (updatedCart && updatedCart.cart_items) {
+        setCart(updatedCart);
+        showSnackbar('Item removed from cart', 'success');
+      } else {
+        throw new Error('Invalid cart data received');
+      }
+    } catch (err: any) {
+      console.error('Error removing from cart:', err);
+      const errorMessage = err.response?.data?.detail || 'Failed to remove item from cart';
+      setError(errorMessage);
+      showSnackbar(errorMessage, 'error');
       throw err;
     } finally {
       setLoading(false);
@@ -122,21 +150,42 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearCart = async () => {
     try {
       setLoading(true);
+      setError(null);
+
+      // If not authenticated, try guest login first
+      if (!isAuthenticated) {
+        await guestLogin();
+      }
+
+      console.log('Clearing cart');
       await cartService.clearCart();
-      setCart(null);
+      setCart({
+        id: 0,
+        user_id: 0,
+        cart_items: [],
+        order_number: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
       showSnackbar('Cart cleared', 'success');
-    } catch (err) {
-      setError('Failed to clear cart');
-      showSnackbar('Failed to clear cart', 'error');
+    } catch (err: any) {
+      console.error('Error clearing cart:', err);
+      const errorMessage = err.response?.data?.detail || 'Failed to clear cart';
+      setError(errorMessage);
+      showSnackbar(errorMessage, 'error');
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
+  // Initialize cart when auth state changes or component mounts
   useEffect(() => {
-    refreshCart();
-  }, [refreshCart, isAuthenticated]);
+    if (isAuthenticated) {
+      console.log('Auth state changed, refreshing cart. isAuthenticated:', isAuthenticated);
+      refreshCart();
+    }
+  }, [isAuthenticated]); // Only depend on isAuthenticated, not refreshCart
 
   return (
     <CartContext.Provider

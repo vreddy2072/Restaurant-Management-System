@@ -39,7 +39,7 @@ class MenuService {
     
     console.log('Fetching menu items with params:', params.toString());
     try {
-      const response = await api.get('/menu/items', { params });
+      const response = await api.get('/api/menu/items', { params });
       console.log('Menu items response:', response.data);
       return response.data.map(ensureAbsoluteImageUrl);
     } catch (error) {
@@ -51,7 +51,7 @@ class MenuService {
   async getMenuItem(id: number): Promise<MenuItem> {
     console.log(`Fetching menu item with ID: ${id}`);
     try {
-      const response = await api.get(`/menu/items/${id}`);
+      const response = await api.get(`/api/menu/items/${id}`);
       console.log('Menu item response:', response.data);
       return ensureAbsoluteImageUrl(response.data);
     } catch (error) {
@@ -63,7 +63,7 @@ class MenuService {
   async createMenuItem(data: MenuItemCreate): Promise<MenuItem> {
     console.log('Creating menu item with data:', data);
     try {
-      const response = await api.post('/menu/items', data);
+      const response = await api.post('/api/menu/items', data);
       console.log('Create menu item response:', response.data);
       return response.data;
     } catch (error) {
@@ -75,7 +75,7 @@ class MenuService {
   async updateMenuItem(id: number, data: MenuItemUpdate): Promise<MenuItem> {
     console.log(`Updating menu item ${id} with data:`, data);
     try {
-      const response = await api.patch(`/menu/items/${id}`, data, {
+      const response = await api.patch(`/api/menu/items/${id}`, data, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
@@ -99,7 +99,7 @@ class MenuService {
   async deleteMenuItem(id: number): Promise<void> {
     console.log(`Deleting menu item ${id}`);
     try {
-      await api.delete(`/menu/items/${id}`, {
+      await api.delete(`/api/menu/items/${id}`, {
         headers: {
           'Accept': 'application/json'
         }
@@ -123,7 +123,7 @@ class MenuService {
     if (activeOnly) params.append('active_only', 'true');
     console.log('Fetching categories with params:', params.toString());
     try {
-      const response = await api.get('/menu/categories', { params });
+      const response = await api.get('/api/menu/categories', { params });
       console.log('Categories response:', response.data);
       return response.data;
     } catch (error) {
@@ -133,18 +133,18 @@ class MenuService {
   }
 
   async getCategory(id: number): Promise<Category> {
-    const response = await api.get(`/menu/categories/${id}`);
+    const response = await api.get(`/api/menu/categories/${id}`);
     return response.data;
   }
 
   async createCategory(data: CategoryCreate): Promise<Category> {
-    const response = await api.post('/menu/categories', data);
+    const response = await api.post('/api/menu/categories', data);
     return response.data;
   }
 
   async updateCategory(id: number, data: CategoryUpdate): Promise<Category> {
     try {
-      const response = await api.patch(`/menu/categories/${id}`, data, {
+      const response = await api.patch(`/api/menu/categories/${id}`, data, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
@@ -166,7 +166,7 @@ class MenuService {
 
   async deleteCategory(id: number): Promise<void> {
     try {
-      await api.delete(`/menu/categories/${id}`, {
+      await api.delete(`/api/menu/categories/${id}`, {
         headers: {
           'Accept': 'application/json'
         }
@@ -190,7 +190,7 @@ class MenuService {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await api.post(`/menu/items/${id}/image`, formData, {
+      const response = await api.post(`/api/menu/items/${id}/image`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Accept': 'application/json'
@@ -216,7 +216,7 @@ class MenuService {
   async getAllergens(): Promise<Allergen[]> {
     console.log('Fetching allergens...');
     try {
-      const response = await api.get('/menu/allergens');
+      const response = await api.get('/api/menu/allergens');
       console.log('Allergens response:', response.data);
       return response.data;
     } catch (error) {

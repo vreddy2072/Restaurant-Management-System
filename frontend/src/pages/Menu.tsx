@@ -160,6 +160,7 @@ const Menu: React.FC = () => {
         menu_item_id: item.id,
         quantity: 1,
       });
+      // Cart will be automatically refreshed by the addToCart function
     } catch (err) {
       console.error('Failed to add item to cart:', err);
     }
@@ -257,7 +258,7 @@ const Menu: React.FC = () => {
               </Typography>
               <Button
                 variant="contained"
-                size="small"
+                color="primary"
                 startIcon={<AddIcon />}
                 onClick={() => handleAddToCart(item)}
                 disabled={cartLoading}

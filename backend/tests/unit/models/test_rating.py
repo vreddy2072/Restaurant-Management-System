@@ -52,23 +52,32 @@ def test_create_restaurant_feedback(db_session, test_user):
     feedback = RestaurantFeedback(
         user_id=test_user.id,
         feedback_text="Great atmosphere and service",
-        category="service"
+        service_rating=5,
+        ambiance_rating=4,
+        cleanliness_rating=5,
+        value_rating=4
     )
     db_session.add(feedback)
     db_session.commit()
 
     assert feedback.id is not None
     assert feedback.feedback_text == "Great atmosphere and service"
-    assert feedback.category == "service"
+    assert feedback.service_rating == 5
+    assert feedback.ambiance_rating == 4
+    assert feedback.cleanliness_rating == 5
+    assert feedback.value_rating == 4
     assert feedback.created_at is not None
     assert feedback.updated_at is not None
 
-def test_invalid_feedback_category(db_session, test_user):
-    with pytest.raises(ValueError, match="Invalid category"):
+def test_invalid_rating_values(db_session, test_user):
+    with pytest.raises(ValueError, match="Service Rating must be between 1 and 5"):
         feedback = RestaurantFeedback(
             user_id=test_user.id,
             feedback_text="Great place",
-            category="invalid_category"
+            service_rating=6,
+            ambiance_rating=4,
+            cleanliness_rating=4,
+            value_rating=4
         )
         db_session.add(feedback)
         db_session.commit()
@@ -78,7 +87,10 @@ def test_empty_feedback_text(db_session, test_user):
         feedback = RestaurantFeedback(
             user_id=test_user.id,
             feedback_text="   ",
-            category="service"
+            service_rating=4,
+            ambiance_rating=4,
+            cleanliness_rating=4,
+            value_rating=4
         )
         db_session.add(feedback)
         db_session.commit()

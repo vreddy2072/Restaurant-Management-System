@@ -58,7 +58,14 @@ async def get_current_user(
         
     service = UserService(db)
     user = service.get_user_by_email(email)
-    if user is None or not user.is_active:
+    if user is None:
         return None
+    
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated or user is deactivated",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
         
     return user

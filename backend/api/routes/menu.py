@@ -29,7 +29,7 @@ logger.info(f"Using images directory: {IMAGES_DIR}")
 # Create images directory if it doesn't exist
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
-router = APIRouter(prefix="/api/menu", tags=["menu"])
+router = APIRouter(prefix="/menu", tags=["menu"])
 
 # Category routes
 @router.post("/categories/", response_model=Category, status_code=201)

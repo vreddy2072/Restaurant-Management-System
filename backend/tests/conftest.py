@@ -1,137 +1,80 @@
-import os
-os.environ["TESTING"] = "1"  # Set testing environment before any imports
-
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, inspect
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
-from pathlib import Path
-from backend.utils.database import SessionLocal, init_db, Base, engine, get_db
 
+# Import Base from utils.database
+from backend.utils.database import Base, get_db
 from backend.api.app import app
-from backend.models.orm.menu import Category, MenuItem, Allergen
-from backend.models.orm.user import User
-from backend.models.orm.shopping_cart import ShoppingCart, CartItem
-from backend.models.orm.rating import MenuItemRating, RestaurantFeedback
 from backend.utils.auth import create_access_token
-from httpx import AsyncClient
 
-# Get the absolute path to the backend directory
-BACKEND_DIR = Path(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-BACKEND_DIR = BACKEND_DIR / "backend"
+# Import all models to ensure they are registered with Base
+from backend.models.orm.user import User
+from backend.models.orm.order import Order
+from backend.models.orm.shopping_cart import ShoppingCart, CartItem
+from backend.models.orm.menu import MenuItem, Category, Allergen
+from backend.models.orm.rating import MenuItemRating, RestaurantFeedback
 
-# Ensure test database directory exists
-db_path = BACKEND_DIR / "database"
-db_path.mkdir(parents=True, exist_ok=True)
+# Create an in-memory SQLite database for testing
+SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
-# Use a separate test database with absolute path
-TEST_DATABASE_URL = f"sqlite:///{db_path}/test.db"
-
-# Create test engine
-test_engine = create_engine(
-    TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False}  # Allow SQLite to be used across threads
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
-
-@pytest.fixture(scope="session", autouse=True)
-def initialize_database():
-    """Initialize the database before running tests"""
-    # Drop all tables and recreate them
-    Base.metadata.drop_all(bind=test_engine)
-    Base.metadata.create_all(bind=test_engine)
-
-def override_get_db():
-    """Override the get_db dependency for testing"""
+@pytest.fixture(scope="function")
+def db_session() -> Session:
+    """Create a fresh database session for a test."""
+    # Debug: Print all tables in metadata before engine creation
+    print("\nTables in metadata before engine creation:", Base.metadata.tables.keys())
+    
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    
+    # Debug: Print all tables in metadata before table creation
+    print("\nTables in metadata before table creation:", Base.metadata.tables.keys())
+    
+    # Create all tables
+    Base.metadata.create_all(bind=engine)
+    
+    # Debug: Print all tables that were created
+    inspector = inspect(engine)
+    print("\nCreated tables:", inspector.get_table_names())
+    
+    # Debug: Print User table columns
+    if 'users' in inspector.get_table_names():
+        print("\nUser table columns:", [col['name'] for col in inspector.get_columns('users')])
+    
+    # Create session
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = TestingSessionLocal()
+    
     try:
         yield db
     finally:
         db.close()
+        Base.metadata.drop_all(bind=engine)
 
-@pytest.fixture(autouse=True)
-def cleanup_database():
-    """Clean up database before each test"""
-    session = TestingSessionLocal()
-    try:
-        for table in reversed(Base.metadata.sorted_tables):
-            session.execute(table.delete())
-        session.commit()
-    finally:
-        session.close()
-    yield
-
-@pytest.fixture
-def db_session():
-    """Get a database session for each test"""
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-@pytest.fixture
-def client(db_session):
-    """Get a test client"""
+@pytest.fixture(scope="function")
+def client(db_session: Session) -> TestClient:
+    """Create a test client with the test database session."""
+    def override_get_db():
+        try:
+            yield db_session
+        finally:
+            pass
+    
     app.dependency_overrides[get_db] = override_get_db
     yield TestClient(app)
     app.dependency_overrides.clear()
 
-@pytest.fixture
-async def async_client(db_session):
-    """Create an async test client"""
-    app.dependency_overrides[get_db] = lambda: db_session
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        yield ac
-    app.dependency_overrides.clear()
-
-@pytest.fixture
-def sample_category(db_session):
-    """Create a sample category for testing."""
-    from backend.models.orm.menu import Category
-    import uuid
-    unique_name = f"Test Category {uuid.uuid4()}"
-    category = Category(
-        name=unique_name,
-        description="Test Description"
-    )
-    db_session.add(category)
-    db_session.commit()
-    db_session.refresh(category)
-    return category
-
-def get_category(db_session, category_id):
-    """Helper function to get a fresh category instance."""
-    from backend.models.orm.menu import Category
-    return db_session.query(Category).filter(Category.id == category_id).first()
-
-@pytest.fixture
-def sample_menu_item(db_session, sample_category):
-    """Create a sample menu item for testing."""
-    from backend.models.orm.menu import MenuItem
-    import uuid
-    unique_name = f"Test Item {uuid.uuid4()}"
-    menu_item = MenuItem(
-        name=unique_name,
-        description="Test Item Description",
-        price=9.99,
-        category_id=sample_category.id,
-        is_vegetarian=True,
-        spice_level=1,
-        preparation_time=15
-    )
-    db_session.add(menu_item)
-    db_session.commit()
-    db_session.refresh(menu_item)
-    return menu_item
-
-@pytest.fixture
-def test_user(db_session):
-    """Create a test user for testing."""
+@pytest.fixture(scope="function")
+def test_user(db_session: Session) -> User:
+    """Create a test user."""
     user = User(
         username="testuser",
         email="test@example.com",
-        password_hash="hashed_password",
+        password_hash="hashedpassword",
         first_name="Test",
         last_name="User",
         role="customer"
@@ -141,115 +84,85 @@ def test_user(db_session):
     db_session.refresh(user)
     return user
 
-@pytest.fixture
-def sample_cart(db_session, test_user):
-    """Create a sample shopping cart for testing."""
-    cart = ShoppingCart(user_id=test_user.id)
-    db_session.add(cart)
-    db_session.commit()
-    db_session.refresh(cart)
-    return cart
+@pytest.fixture(scope="function")
+def test_user_token(test_user: User) -> str:
+    """Create a JWT token for the test user."""
+    return create_access_token(data={"sub": test_user.email})
 
-@pytest.fixture
-def sample_cart_item(db_session, sample_cart, sample_menu_item):
-    """Create a sample cart item for testing."""
-    cart_item = CartItem(
-        cart_id=sample_cart.id,
-        menu_item_id=sample_menu_item.id,
-        quantity=2,
-        customizations={"notes": "Extra spicy"}
+@pytest.fixture(scope="function")
+def staff_user(db_session: Session) -> User:
+    """Create a staff user."""
+    user = User(
+        username="staffuser",
+        email="staff@example.com",
+        password_hash="hashedpassword",
+        first_name="Staff",
+        last_name="User",
+        role="staff",
+        is_staff=True
     )
-    db_session.add(cart_item)
+    db_session.add(user)
     db_session.commit()
-    db_session.refresh(cart_item)
-    return cart_item
+    db_session.refresh(user)
+    return user
 
-@pytest.fixture
-def sample_menu_item_rating(db_session, test_user, sample_menu_item):
-    """Create a sample menu item rating for testing."""
-    rating = MenuItemRating(
-        user_id=test_user.id,
-        menu_item_id=sample_menu_item.id,
-        rating=4,
-        comment="Great dish!"
+@pytest.fixture(scope="function")
+def sample_category(db_session: Session) -> Category:
+    """Create a sample category."""
+    category = Category(
+        name="Main Course",
+        description="Main dishes"
     )
-    db_session.add(rating)
-    db_session.commit()
-    db_session.refresh(rating)
-    return rating
-
-@pytest.fixture
-def sample_restaurant_feedback(db_session, test_user):
-    """Create a sample restaurant feedback for testing."""
-    feedback = RestaurantFeedback(
-        user_id=test_user.id,
-        feedback_text="Excellent service and ambiance",
-        category="service"
-    )
-    db_session.add(feedback)
-    db_session.commit()
-    db_session.refresh(feedback)
-    return feedback
-
-@pytest.fixture
-def test_menu_item(db_session):
-    """Create a test menu item"""
-    category = Category(name="Test Category", description="Test Description")
     db_session.add(category)
     db_session.commit()
+    db_session.refresh(category)
+    return category
 
+@pytest.fixture(scope="function")
+def sample_menu_item(db_session: Session, sample_category: Category) -> MenuItem:
+    """Create a sample menu item."""
     menu_item = MenuItem(
-        name="Test Item",
-        description="Test Description",
-        price=9.99,
-        category_id=category.id,
-        is_active=True,
-        image_url="test.jpg"
+        name="Test Dish",
+        description="A test dish",
+        price=10.99,
+        category_id=sample_category.id,
+        is_available=True,
+        spice_level=1,
+        is_vegetarian=True,
+        is_vegan=False,
+        is_gluten_free=False
     )
     db_session.add(menu_item)
     db_session.commit()
     db_session.refresh(menu_item)
     return menu_item
 
-@pytest.fixture
-def test_cart(db_session, test_user):
-    """Create a test shopping cart"""
-    cart = ShoppingCart(user_id=test_user.id)
-    db_session.add(cart)
-    db_session.commit()
-    db_session.refresh(cart)
-    return cart
-
-@pytest.fixture
-def test_cart_item(db_session, test_cart, test_menu_item):
-    """Create a test cart item"""
-    cart_item = CartItem(
-        cart_id=test_cart.id,
-        menu_item_id=test_menu_item.id,
-        quantity=1
+@pytest.fixture(scope="function")
+def sample_menu_item_rating(db_session: Session, test_user: User, sample_menu_item: MenuItem) -> MenuItemRating:
+    """Create a sample menu item rating."""
+    rating = MenuItemRating(
+        user_id=test_user.id,
+        menu_item_id=sample_menu_item.id,
+        rating=4,
+        comment="Good dish"
     )
-    db_session.add(cart_item)
+    db_session.add(rating)
     db_session.commit()
-    db_session.refresh(cart_item)
-    return cart_item
+    db_session.refresh(rating)
+    return rating
 
-@pytest.fixture
-def test_user_token(db_session):
-    """Create a JWT token for the test user"""
-    from backend.services.user_service import UserService
-    from backend.models.schemas.user import UserCreate
-    
-    # Create a test user with proper password hashing
-    user_service = UserService(db_session)
-    user_data = UserCreate(
-        username="testuser",
-        email="test@example.com",
-        password="testpass123",
-        first_name="Test",
-        last_name="User",
-        role="customer"
+@pytest.fixture(scope="function")
+def sample_restaurant_feedback(db_session: Session, test_user: User) -> RestaurantFeedback:
+    """Create a sample restaurant feedback."""
+    feedback = RestaurantFeedback(
+        user_id=test_user.id,
+        feedback_text="Great experience overall",
+        service_rating=5,
+        ambiance_rating=4,
+        cleanliness_rating=5,
+        value_rating=4
     )
-    user = user_service.create_user(user_data)
-    
-    # Create and return the token
-    return create_access_token(data={"sub": user.email})
+    db_session.add(feedback)
+    db_session.commit()
+    db_session.refresh(feedback)
+    return feedback

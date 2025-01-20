@@ -11,11 +11,8 @@ from backend.utils.auth import create_access_token, get_current_user
 # Configure logging
 logger = logging.getLogger(__name__)
 
-router = APIRouter(
-    prefix="/users",
-    tags=["users"],
-    responses={404: {"description": "Not found"}},
-)
+# Create API router for user endpoints
+router = APIRouter(prefix="/users", tags=["users"])
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED, tags=["users"])
 async def register_user(request: Request, user_data: UserCreate, db: Session = Depends(get_db)):
@@ -95,9 +92,17 @@ async def guest_login(request: Request, db: Session = Depends(get_db)):
             detail="An unexpected error occurred during guest login"
         )
 
-@router.get("/me", response_model=UserResponse, tags=["users"])
+@router.get("/me", response_model=UserResponse, responses={
+    401: {"description": "Not authenticated or user is deactivated"}
+}, tags=["users"])
 async def get_me(current_user: UserResponse = Depends(get_current_user)):
     """Get current user information"""
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated or user is deactivated",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
     return current_user
 
 @router.put("/me", response_model=UserResponse, tags=["users"])

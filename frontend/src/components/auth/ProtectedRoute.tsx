@@ -4,27 +4,23 @@ import { useAuth } from '../../contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'admin' | 'staff' | 'customer';
+  requiredRole?: 'admin' | 'staff' | 'customer';  // Keeping the interface but not using it
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  requiredRole 
+  children 
 }) => {
   const location = useLocation();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
+
+  console.log('ProtectedRoute - Auth status:', { isAuthenticated, location });
 
   if (!isAuthenticated) {
     // Redirect to the login page with the return url
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  // Check role if required
-  if (requiredRole && user?.role !== requiredRole) {
-    // Redirect to home page if user doesn't have required role
-    return <Navigate to="/" replace />;
-  }
-
+  // Removed role check - all authenticated users can access
   return <>{children}</>;
 };
 

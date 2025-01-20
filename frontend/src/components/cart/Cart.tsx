@@ -1,14 +1,16 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   Box,
   Typography,
   Button,
   CircularProgress,
-  Paper,
+  Stack,
   Divider,
   Container,
-  Dialog,
+  Modal,
   Alert,
+  AlertTitle,
+  Paper,
 } from '@mui/material';
 import { useCart } from '../../contexts/CartContext';
 import CartItem from './CartItem';
@@ -16,27 +18,27 @@ import CartSummary from './CartSummary';
 
 const Cart: React.FC = () => {
   const { cart, loading, error, clearCart } = useCart();
-  const [alertOpen, setAlertOpen] = useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
 
   const cartTotal = useMemo(() => {
-    if (!cart?.items) return 0;
-    return cart.items.reduce((total, item) => {
-      return total + (item.subtotal || 0);
+    if (!cart?.cart_items) return 0;
+    return cart.cart_items.reduce((total, item) => {
+      return total + (item.menu_item.price * item.quantity);
     }, 0);
-  }, [cart?.items]);
+  }, [cart?.cart_items]);
 
   const handleCheckout = () => {
-    setAlertOpen(true);
+    setIsOpen(true);
   };
 
-  const handleAlertClose = () => {
-    setAlertOpen(false);
+  const handleClose = () => {
+    setIsOpen(false);
   };
 
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" p={4}>
-        <CircularProgress />
+        <CircularProgress size={40} />
       </Box>
     );
   }
@@ -44,15 +46,18 @@ const Cart: React.FC = () => {
   if (error) {
     return (
       <Box p={4}>
-        <Typography color="error">{error}</Typography>
+        <Alert severity="error">
+          <AlertTitle>Error</AlertTitle>
+          {error}
+        </Alert>
       </Box>
     );
   }
 
-  if (!cart || cart.items.length === 0) {
+  if (!cart?.cart_items || cart.cart_items.length === 0) {
     return (
       <Box p={4}>
-        <Typography variant="h6" align="center">
+        <Typography variant="h5" align="center">
           Your cart is empty
         </Typography>
       </Box>
@@ -62,51 +67,48 @@ const Cart: React.FC = () => {
   return (
     <Box sx={{ pb: { xs: 16, sm: 14 } }}>
       <Container maxWidth="lg">
-        <Box sx={{ position: 'relative' }}>
-          <Paper elevation={3}>
-            <Box p={2}>
-              <Typography variant="h5" gutterBottom>
-                Your Cart
-              </Typography>
-              <Divider sx={{ my: 1 }} />
-              
-              <Box>
-                {cart.items.map((item) => (
-                  <CartItem key={item.id} item={item} />
-                ))}
-              </Box>
-            </Box>
+        <Box position="relative">
+          <Paper elevation={2} sx={{ p: 4, borderRadius: 2 }}>
+            <Typography variant="h4" sx={{ mb: 2 }}>
+              Your Cart
+            </Typography>
+            <Divider sx={{ mb: 4 }} />
+            
+            <Stack spacing={4}>
+              {cart.cart_items.map((item) => (
+                <CartItem key={item.id} item={item} />
+              ))}
+            </Stack>
           </Paper>
         </Box>
       </Container>
 
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          position: 'fixed', 
-          bottom: 0, 
-          left: 0, 
-          right: 0, 
+      <Paper
+        elevation={4}
+        sx={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
           zIndex: 1000,
-          backgroundColor: 'background.paper',
           borderTop: 1,
-          borderColor: 'divider',
+          borderColor: 'divider'
         }}
       >
         <Container maxWidth="lg">
-          <Box 
-            sx={{ 
-              py: 1.5,
-              px: 2,
-              display: 'flex',
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            sx={{
+              py: 3,
+              px: 4,
+              gap: 2,
               alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 2
+              justifyContent: 'space-between'
             }}
           >
             <Button
               variant="outlined"
-              color="secondary"
+              color="error"
               onClick={() => clearCart()}
               size="small"
             >
@@ -120,39 +122,33 @@ const Cart: React.FC = () => {
             <Button
               variant="contained"
               color="primary"
-              disabled={cart.items.length === 0}
+              disabled={!cart?.cart_items || cart.cart_items.length === 0}
               size="medium"
               onClick={handleCheckout}
             >
-              Proceed to Checkout
+              Confirm Order
             </Button>
-          </Box>
+          </Stack>
         </Container>
       </Paper>
 
-      <Dialog
-        open={alertOpen}
-        onClose={handleAlertClose}
-        PaperProps={{
-          sx: {
-            minWidth: '300px',
-            maxWidth: '400px',
-            m: 2
-          }
+      <Modal
+        open={isOpen}
+        onClose={handleClose}
+        aria-labelledby="checkout-modal"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
       >
-        <Alert 
-          onClose={handleAlertClose} 
-          severity="info" 
-          variant="filled"
-          sx={{ 
-            fontSize: '1.1rem',
-            padding: '16px 24px'
-          }}
-        >
-          Checkout functionality is coming soon!
-        </Alert>
-      </Dialog>
+        <Paper sx={{ p: 4, mx: 2, maxWidth: 400 }}>
+          <Alert severity="info">
+            <AlertTitle>Coming Soon</AlertTitle>
+            Checkout functionality is coming soon!
+          </Alert>
+        </Paper>
+      </Modal>
     </Box>
   );
 };

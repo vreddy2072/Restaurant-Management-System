@@ -7,13 +7,13 @@ backend/run_test_migrations.py
 backend/setup.py
 backend/api/__init__.py
 backend/api/app.py
+backend/api/dependencies.py
+backend/api/vercel_handler.py
 backend/models/__init__.py
-backend/services/cart.py
 backend/services/cart_service.py
-backend/services/menu.py
 backend/services/menu_service.py
 backend/services/rating_service.py
-backend/services/user.py
+backend/services/user_service.py
 backend/utils/auth.py
 backend/utils/database.py
 restaurant_management_system.egg-info/PKG-INFO
